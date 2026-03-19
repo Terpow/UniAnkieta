@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   db:
     image: postgres:15
@@ -12,6 +13,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck: # Добавляем проверку здоровья БД
+      test: ["CMD-SHELL", "pg_isready -U user -d uniankieta"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -19,9 +25,11 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy # Ждем, пока БД будет полностью готова
     environment:
-      DATABASE_URL: postgresql://user:password@db:5432/uniankieta
+      - DATABASE_URL=postgresql://user:password@db:5432/uniankieta
+    restart: on-failure # Перезагружать API, если оно всё же упадет при старте
 
 volumes:
   postgres_data:
