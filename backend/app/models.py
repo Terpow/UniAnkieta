@@ -26,6 +26,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="Student") # Student, Teacher, Admin
+    sso_id = Column(String, unique=True, index=True, nullable=True)
     
     group_id = Column(Integer, ForeignKey("groups.id"))
     group = relationship("Group", back_populates="users")
