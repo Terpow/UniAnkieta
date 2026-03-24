@@ -2,23 +2,46 @@ import os
 from datetime import datetime, timedelta, timezone
 from jose import jwt
 from dotenv import load_dotenv
-<<<<<<< HEAD
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+
+# Импорты твоего проекта
 from app.database import get_db
 from app.models import User
 
+# Загружаем переменные из .env
+load_dotenv()
 
+SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key-change-me")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
 # Указываем FastAPI, где искать токен (в заголовке Authorization: Bearer <token>)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
+def create_access_token(user_id: int, role: str):
+    """
+    Генерирует JWT токен. 
+    В 'sub' кладем ID юзера, также добавляем его роль.
+    """
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    # Данные для шифрования (Payload)
+    to_encode = {
+        "sub": str(user_id), 
+        "role": role, 
+        "exp": expire
+    }
+    
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    """Извлекает юзера из базы по токену"""
+    """Извлекает юзера из базы по токену и проверяет его валидность"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Не удалось проверить учетные данные",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -30,6 +53,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except Exception:
         raise credentials_exception
         
+    # Ищем пользователя в БД
     user = db.query(User).filter(User.id == int(user_id)).first()
     if user is None:
         raise credentials_exception
@@ -40,36 +64,6 @@ def get_current_admin_user(current_user: User = Depends(get_current_user)):
     if current_user.role != "Admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Недостаточно прав. Только для Администраторов."
+            detail="Недостаточно прав. Доступ только для Администраторов."
         )
     return current_user
-=======
->>>>>>> 87c5cbae1f99cc936999fa255ba9ca231575cdad
-
-# Загружаем переменные из .env
-load_dotenv()
-
-SECRET_KEY = os.getenv("JWT_SECRET", "super-secret-key-change-me") # добавил дефолт на всякий
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-
-def create_access_token(user_id: int, role: str):
-    """
-    Генерирует JWT токен. 
-    В 'sub' кладем ID юзера, также добавляем его роль.
-    """
-    # Берем время истечения из .env или ставим 30 минут по умолчанию
-    expire_minutes = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
-    expire = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
-    
-    # Данные для шифрования (Payload)
-    # Важно: sub должен быть строкой для стандарта JWT
-    to_encode = {
-        "sub": str(user_id), 
-        "role": role, 
-        "exp": expire
-    }
-    
-    # Создаем зашифрованную строку
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    
-    return encoded_jwt
