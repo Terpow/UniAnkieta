@@ -53,6 +53,7 @@ async def auth_callback(code: str, db: Session = Depends(get_db)): # Добав�
             "role": user.role,
             "name": mock_university_profile["name"]
         }
+<<<<<<< HEAD
     }
 
 @router.post("/logout")
@@ -60,3 +61,6 @@ async def logout():
     """Безопасный выход: фронтенд должен удалить токен, а сервер подтверждает сброс"""
     return {"message": "Successfully logged out. Please delete your token on the client side."}
 
+=======
+    }
+>>>>>>> 87c5cbae1f99cc936999fa255ba9ca231575cdad

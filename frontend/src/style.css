@@ -259,6 +259,81 @@ body {
     animation: fadeIn 0.5s ease;
 }
 
+.login-card {
+    max-width: 440px;
+    margin: 80px auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 14px 30px rgba(15,23,42,0.14);
+    text-align: center;
+}
+
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.login-logo {
+    font-size: 32px;
+}
+
+.login-card h1 {
+    margin: 6px 0 8px;
+    font-size: 26px;
+}
+
+.login-card p.login-text,
+.login-hint {
+    margin: 8px 0 14px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.login-button {
+    margin-top: 8px;
+    width: 100%;
+    background: var(--brand);
+    color: #fff;
+    border: 0;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.login-button:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.login-button:hover:not(:disabled) {
+    background: var(--brand-2);
+    transform: translateY(-1px);
+}
+
+.login-status {
+    margin-top: 12px;
+    min-height: 18px;
+    color: var(--brand);
+    font-size: 13px;
+}
+
+@media (max-width: 700px) {
+    .login-card {
+        margin: 40px 12px;
+    }
+    .uni-main {
+        margin: 20px auto;
+    }
+}
+
+
 .header {
     display: flex;
     justify-content: space-between;
