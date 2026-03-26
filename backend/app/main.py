@@ -6,6 +6,7 @@ from sqlalchemy.exc import OperationalError
 from dotenv import load_dotenv
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi # Добавили импорт
 
 # Импорты вашего проекта
 from app.database import engine, get_db
@@ -67,15 +68,13 @@ def root():
 def health_check():
     return {"status": "OK", "message": "Пулемет заряжен, SSO интегрировано!"}
 
-# --- 6. ТЕСТОВЫЕ ВХОДЫ (Теперь реально сохраняют в базу!) ---
+# --- 6. ТЕСТОВЫЕ ВХОДЫ ---
 
 @app.get("/api/auth/dev-login-admin", tags=["Development"])
 def dev_login_admin(db: Session = Depends(get_db)):
-    """Выдает токен Админа и СОЗДАЕТ его в базе"""
-    # Этот вызов заставит базу сохранить юзера
     user = authenticate_or_create_user(
         db=db, 
-        sso_email="admin@admin.pl", # Оканчивается на @admin.pl -> роль Admin
+        sso_email="admin@admin.pl", 
         sso_id="dev_admin_fixed_id"
     )
     token = create_access_token(user_id=user.id, role=user.role)
@@ -87,7 +86,6 @@ def dev_login_admin(db: Session = Depends(get_db)):
 
 @app.get("/api/auth/dev-login-student", tags=["Development"])
 def dev_login_student(db: Session = Depends(get_db)):
-    """Выдает токен Студента и СОЗДАЕТ его в базе"""
     user = authenticate_or_create_user(
         db=db, 
         sso_email="student@student.pl", 
@@ -128,3 +126,35 @@ def sso_callback(code: str, db: Session = Depends(get_db)):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"SSO Auth Error: {str(e)}")
+
+# --- 8. КАСТОМИЗАЦИЯ OPENAPI (Для кнопки Authorize) ---
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    
+    # Определяем схему Bearer (JWT)
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    
+    # Указываем, что BearerAuth нужен для всех путей в API
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+            
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
