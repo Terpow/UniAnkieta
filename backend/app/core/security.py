@@ -2,7 +2,6 @@ import os
 from datetime import datetime, timedelta, timezone
 from jose import jwt
 from dotenv import load_dotenv
-<<<<<<< HEAD
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -43,8 +42,6 @@ def get_current_admin_user(current_user: User = Depends(get_current_user)):
             detail="Недостаточно прав. Только для Администраторов."
         )
     return current_user
-=======
->>>>>>> 87c5cbae1f99cc936999fa255ba9ca231575cdad
 
 # Загружаем переменные из .env
 load_dotenv()

@@ -1,48 +1,25 @@
-// login.js
-
 const TOKEN_KEY = 'uniankieta_jwt';
-
-function safeJsonParse(value) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
 
 function decodeJwt(token) {
   if (!token || token.split('.').length !== 3) return null;
   try {
     const payload = token.split('.')[1];
-    const padded = payload.padEnd(payload.length + (4 - (payload.length % 4)) % 4, '=');
-    const decoded = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
-    return safeJsonParse(decodeURIComponent(escape(decoded)));
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return decoded;
   } catch (e) {
-    console.error('JWT parse error', e);
     return null;
   }
 }
 
-export function setToken(token) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
-}
+export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 export function getRoleFromToken(token) {
   const decoded = decodeJwt(token);
   if (!decoded) return null;
-
-  const role = decoded.role || decoded.user?.role || decoded.rola || null;
-  if (!role) return null;
-
-  return String(role).toLowerCase();
+  const role = decoded.role || decoded.user?.role || null;
+  return role ? String(role).toLowerCase() : null;
 }
 
 export function buildLoginUI(container) {
@@ -54,50 +31,35 @@ export function buildLoginUI(container) {
             <div class="login-logo">🏛️</div>
             <div>
               <h1>UniAnkieta</h1>
-              <p>System ankiet studenckich (SSO uwzględniony)</p>
+              <p>System ankiet studenckich (SSO)</p>
             </div>
           </div>
-
-          <p class="login-text">Zaloguj się przez system uczelni.
-          Po stronie backendu następuje przekierowanie na stronę SSO, a po weryfikacji wracasz z tokenem.</p>
-
+          <p class="login-text">Zaloguj się przez system uczelniany, aby przejść do ankiet или panelu administratora.</p>
           <button id="sso-login-btn" class="login-button">Zaloguj przez SSO uczelni</button>
-          <p id="login-status" class="login-status"></p>
-
-          <div class="login-hint">Dlaczego nie AJAX? SSO wymaga przekierowania do zewnętrznej strony logowania.</div>
+          <div id="login-status" style="margin-top:10px; font-size:14px; color:#666;"></div>
         </div>
       </main>
     </div>
   `;
 
-  const btn = document.getElementById('sso-login-btn');
-  const status = document.getElementById('login-status');
-
-  btn.addEventListener('click', () => {
-    btn.disabled = true;
-    btn.textContent = 'Przekierowanie...';
-    status.textContent = 'Łączenie z serwerem SSO...';
-
-    setTimeout(() => {
-      window.location.href = 'http://localhost:8000/api/auth/login';
-    }, 300);
+  document.getElementById('sso-login-btn').addEventListener('click', () => {
+    document.getElementById('sso-login-btn').textContent = 'Przekierowanie...';
+    window.location.href = 'http://localhost:8000/api/auth/login';
   });
 }
 
+/**
+ * Перехватывает токен из URL после редиректа
+ */
 export function handleSSOCallback() {
   const params = new URLSearchParams(window.location.search);
-  let token = params.get('token');
+  const token = params.get('token');
 
-  if (!token) {
-    const cookies = document.cookie.split(';').map(c => c.trim());
-    const cookieToken = cookies.find(c => c.startsWith(`${TOKEN_KEY}=`));
-    if (cookieToken) token = cookieToken.split('=')[1];
+  if (token) {
+    setToken(token);
+    // Убираем токен из адресной строки для красоты
+    window.history.replaceState(null, '', window.location.pathname);
+    return getRoleFromToken(token);
   }
-
-  if (!token) return null;
-
-  setToken(token);
-  const role = getRoleFromToken(token);
-  window.history.replaceState(null, '', window.location.pathname);
-  return role;
+  return null;
 }

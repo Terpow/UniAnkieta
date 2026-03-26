@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck: # Добавляем проверку здоровья БД
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d uniankieta"]
       interval: 5s
       timeout: 5s
@@ -26,10 +26,25 @@ services:
       - "8000:8000"
     depends_on:
       db:
-        condition: service_healthy # Ждем, пока БД будет полностью готова
+        condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/uniankieta
-    restart: on-failure # Перезагружать API, если оно всё же упадет при старте
+      - FRONTEND_URL=http://localhost:5173
+    restart: on-failure
+
+  frontend:
+    build: ./frontend
+    container_name: uniankieta_web
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Чтобы модули внутри контейнера не конфликтовали с папкой на диске
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    restart: always
 
 volumes:
   postgres_data:

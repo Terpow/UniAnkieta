@@ -1,41 +1,32 @@
 import './style.css'
 import { buildLoginUI, handleSSOCallback, getToken, getRoleFromToken, clearToken } from './login.js'
+import { renderAdminUsersPage } from './adminUsers.js' // Импортируем страницу управления пользователями
 
+// Данные для студенческого интерфейса (заглушка)
 const surveys = [
   { subject: 'Podstawy Programowania', lecturer: 'dr inż. Jan Kowalski', status: 'Wypełniona' },
   { subject: 'Analiza Matematyczna I', lecturer: 'prof. dr hab. Ewa Nowak', status: 'Oczekuje' },
-  { subject: 'Sieci Komputerowe', lecturer: 'mgr Anna Lis', status: 'Oczekuje' },
-  { subject: 'Wychowanie Fizyczne', lecturer: 'dr Piotr Sportowy', status: 'Wypełniona' }
+  { subject: 'Sieci Komputerowe', lecturer: 'mgr Anna Lis', status: 'Oczekuje' }
 ];
 
+/**
+ * Отрисовка интерфейса СТУДЕНТА
+ */
 function renderSurveyApp() {
   document.querySelector('#app').innerHTML = `
     <div class="uni-app">
       <header class="uni-header">
         <div class="uni-header__inner">
-          <div class="uni-logo">
-            <div class="uni-logo__icon">🏛️</div>
-            <div>
-              <h1>UniAnkieta</h1>
-              <p>Wirtualny System Ankiet Uczelnianych</p>
-            </div>
-          </div>
-          <nav class="uni-nav">
-            <a href="#">Strona główna</a>
-            <a href="#">Ankiety</a>
-            <a href="#">Kontakt</a>
-          </nav>
+          <h1>UniAnkieta</h1>
+          <button id="logout-btn" class="action-button" style="background: #e74c3c">Wyloguj</button>
         </div>
       </header>
-
       <main class="uni-main">
         <section class="uni-welcome">
           <h2>Moje ankiety</h2>
-          <p>Wybierz przedmiot i przejdź do oceny.</p>
+          <p>Wybierz przedmiot i wypełnij opinię.</p>
         </section>
-
         <section class="uni-panel">
-          <h3>Lista przedmiotów do oceny</h3>
           <div class="card">
             <table>
               <thead>
@@ -51,21 +42,15 @@ function renderSurveyApp() {
           </div>
         </section>
       </main>
-
-      <footer class="uni-footer">
-        <p>© 2026 UniAnkieta • Wydział Informatyki UE</p>
-      </footer>
-    </div>
-  `;
-
+    </div>`;
+  
   loadSurveys();
-
-  document.getElementById('logout').addEventListener('click', () => {
-    clearToken();
-    window.location.href = window.location.pathname;
-  });
+  setupLogout();
 }
 
+/**
+ * Отрисовка ГЛАВНОЙ ПАНЕЛИ АДМИНИСТРАТОРА
+ */
 function renderAdminPanel() {
   document.querySelector('#app').innerHTML = `
     <div class="uni-app">
@@ -73,61 +58,103 @@ function renderAdminPanel() {
         <div class="uni-header__inner">
           <div class="uni-logo">
             <div class="uni-logo__icon">🛠️</div>
-            <div>
-              <h1>UniAnkieta - Panel administracyjny</h1>
-              <p>Panel zarządzania ankietami</p>
-            </div>
+            <h1>UniAnkieta - Admin</h1>
           </div>
+          <button id="logout-btn" class="action-button" style="background: #e74c3c">Wyloguj</button>
         </div>
       </header>
       <main class="uni-main">
         <div class="card">
-          <h2>Panel administracyjny</h2>
-          <p>Tu będzie UC-35: zarządzanie ankietami i użytkownikami.</p>
+          <h2>Panel Administratora</h2>
+          <p style="color: green;">● Połączono z bazą PostgreSQL (Docker)</p>
+          <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+          <div class="admin-tools">
+             <strong>Dostępne operacje:</strong>
+             <ul style="margin-top: 10px; list-style: none; padding: 0;">
+                <li style="margin-bottom: 15px;">
+                  <button id="btn-manage-users" class="action-button small" style="background: #3498db; width: 100%; text-align: left; padding: 10px;">
+                    👥 Zarządzaj użytkownikami (RBAC)
+                  </button>
+                </li>
+                <li style="margin-bottom: 10px; color: #7f8c8d;">📝 Zarządzanie listą ankiet (CRUD) - <i>Wkrótce</i></li>
+                <li style="margin-bottom: 10px; color: #7f8c8d;">📊 Eksport wyników do CSV - <i>Wkrótce</i></li>
+             </ul>
+          </div>
         </div>
       </main>
-      <footer class="uni-footer"><p>© 2026 UniAnkieta</p></footer>
-    </div>
-  `;
+    </div>`;
 
-  document.getElementById('logout').addEventListener('click', () => {
-    clearToken();
-    window.location.href = window.location.pathname;
+  // Навешиваем событие на кнопку перехода к списку пользователей
+  document.getElementById('btn-manage-users')?.addEventListener('click', () => {
+    renderAdminUsersPage();
   });
+
+  setupLogout();
 }
 
+/**
+ * Наполнение таблицы анкет для студента
+ */
 function loadSurveys() {
   const body = document.getElementById('survey-body');
   if (!body) return;
-  body.innerHTML = '';
 
-  surveys.forEach(s => {
-    const statusClass = s.status === 'Wypełniona' ? 'status-green' : 'status-red';
-    const action = s.status === 'Oczekuje' ? '<button class="action-button">Wypełnij</button>' : 'Brak';
+  body.innerHTML = surveys.map(s => `
+    <tr>
+      <td><strong>${s.subject}</strong></td>
+      <td>${s.lecturer}</td>
+      <td>
+        <span class="status-badge ${s.status === 'Wypełniona' ? 'status-green' : 'status-red'}">
+          ${s.status}
+        </span>
+      </td>
+      <td>
+        ${s.status === 'Oczekuje' ? '<button class="action-button small">Wypełnij</button>' : '—'}
+      </td>
+    </tr>
+  `).join('');
+}
 
-    body.innerHTML += `
-      <tr>
-        <td>${s.subject}</td>
-        <td>${s.lecturer}</td>
-        <td><span class="${statusClass}">${s.status}</span></td>
-        <td>${action}</td>
-      </tr>
-    `;
+/**
+ * Функция выхода из системы
+ */
+function setupLogout() {
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    clearToken();
+    localStorage.clear(); // Полная очистка для надежности
+    window.location.href = '/';
   });
 }
 
+/**
+ * Точка входа в приложение (Инициализация)
+ */
 function initApp() {
+  // 1. Обработка возврата из SSO (если есть токен в URL)
   const callbackRole = handleSSOCallback();
+  
+  // 2. Получение текущего токена
   const token = getToken();
-  const role = callbackRole || (token ? getRoleFromToken(token) : null);
+  
+  // 3. Определение роли (из URL или из сохраненного JWT)
+  let role = callbackRole || (token ? getRoleFromToken(token) : null);
 
-  if (role === 'student') {
-    renderSurveyApp();
-  } else if (role === 'admin' || role === 'administrator' || role === 'wykladowca') {
+  // Приведение к нижнему регистру для надежности проверки
+  if (role) role = role.toLowerCase();
+
+  console.log("Current User Role:", role);
+
+  if (!role) {
+    // Если роли нет — показываем экран входа
+    buildLoginUI(document.querySelector('#app'));
+  } else if (role === 'admin' || role === 'administrator') {
+    // Если админ — показываем панель управления
     renderAdminPanel();
   } else {
-    buildLoginUI(document.querySelector('#app'));
+    // Все остальные (student, teacher) — в интерфейс анкет
+    renderSurveyApp();
   }
 }
 
+// Запуск приложения
 initApp();
