@@ -1,0 +1,423 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --ink: #0f172a;
+    --muted: #475569;
+    --brand: #0a4aa6;
+    --brand-2: #1e88e5;
+    --accent: #f9a826;
+    --panel: #ffffff;
+    --soft: #eef4ff;
+    --line: #e2e8f0;
+    --ok: #1f9d55;
+    --warn: #e11d48;
+}
+
+body {
+    margin: 0;
+    font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(900px 500px at 10% 10%, #dbeafe 0%, rgba(219,234,254,0) 60%),
+      radial-gradient(700px 400px at 95% 0%, #ffe8c2 0%, rgba(255,232,194,0) 55%),
+      #f6f8fb;
+    min-height: 100vh;
+}
+
+.uni-app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.uni-header {
+    background: linear-gradient(90deg, #0a4aa6, #1e88e5);
+    color: #fff;
+    padding: 18px 24px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.uni-header__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.uni-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.uni-logo__icon {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: #ffffff25;
+    border-radius: 999px;
+}
+
+.uni-logo h1 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.uni-logo p {
+    margin: 0;
+    font-size: 13px;
+    color: #e0e7ff;
+}
+
+.uni-nav a {
+    color: #edf2ff;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: background .2s ease;
+}
+
+.uni-nav a:hover {
+    background: rgba(255,255,255,0.18);
+}
+
+.uni-main {
+    flex: 1;
+    max-width: 1100px;
+    margin: 24px auto;
+    width: 100%;
+    padding: 0 20px;
+}
+
+.uni-welcome {
+    background: var(--soft);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(15,23,42,0.04);
+    margin-bottom: 20px;
+}
+
+.uni-welcome h2 {
+    margin: 0 0 8px;
+    color: var(--ink);
+}
+
+.uni-panel h3 {
+    margin: 0 0 16px;
+    color: var(--brand);
+}
+
+.card {
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+    border: 1px solid var(--line);
+    animation: fadeIn 0.4s ease;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+}
+
+th {
+    background: linear-gradient(90deg, var(--brand), var(--brand-2));
+    color: white;
+    font-weight: 700;
+}
+
+.status-green { color: white; background-color: var(--ok); padding: 6px 10px; border-radius: 999px; }
+.status-red { color: white; background-color: var(--warn); padding: 6px 10px; border-radius: 999px; }
+
+.action-button { background: var(--brand); color: white; border: 0; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: transform .2s ease; }
+.action-button:hover { transform: translateY(-1px); background: var(--brand-2); }
+
+.uni-footer {
+    background: #0f172a;
+    color: #cbd5e1;
+    text-align: center;
+    padding: 16px;
+    font-size: 13px;
+}
+
+@media (max-width: 860px) {
+    .uni-header__inner { flex-direction: column; align-items: flex-start; }
+    .uni-nav { margin-top: 8px; }
+    .uni-main { margin: 16px auto; padding: 0 12px; }
+}
+
+
+body {
+    margin: 0;
+    font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", sans-serif;
+    color: var(--ink);
+    background:
+        radial-gradient(900px 500px at 10% 10%, #dbeafe 0%, rgba(219,234,254,0) 60%),
+        radial-gradient(700px 400px at 95% 0%, #ffe8c2 0%, rgba(255,232,194,0) 55%),
+        #f6f8fb;
+    min-height: 100vh;
+}
+
+#layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+#sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, #0a4aa6 0%, #0b2d6b 100%);
+    color: white;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+#sidebar::after {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    top: -60px;
+    right: -80px;
+}
+
+#sidebar h2 {
+    text-align: center;
+    letter-spacing: 1px;
+    margin-top: 10px;
+}
+
+#sidebar a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 14px 16px;
+    margin: 14px 0;
+    background: rgba(255,255,255,0.12);
+    border-radius: 10px;
+    text-align: center;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+#sidebar a:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-1px);
+}
+
+#sidebar .logout {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: none;
+    background: #ffffff;
+    color: #0b2d6b;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#sidebar .logout:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+#content {
+    flex-grow: 1;
+    padding: 24px;
+}
+
+.card {
+    background: var(--panel);
+    padding: 28px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+    max-width: 980px;
+    margin: 20px auto;
+    border: 1px solid var(--line);
+    animation: fadeIn 0.5s ease;
+}
+
+.login-card {
+    max-width: 440px;
+    margin: 80px auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 14px 30px rgba(15,23,42,0.14);
+    text-align: center;
+}
+
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.login-logo {
+    font-size: 32px;
+}
+
+.login-card h1 {
+    margin: 6px 0 8px;
+    font-size: 26px;
+}
+
+.login-card p.login-text,
+.login-hint {
+    margin: 8px 0 14px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.login-button {
+    margin-top: 8px;
+    width: 100%;
+    background: var(--brand);
+    color: #fff;
+    border: 0;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.login-button:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.login-button:hover:not(:disabled) {
+    background: var(--brand-2);
+    transform: translateY(-1px);
+}
+
+.login-status {
+    margin-top: 12px;
+    min-height: 18px;
+    color: var(--brand);
+    font-size: 13px;
+}
+
+@media (max-width: 700px) {
+    .login-card {
+        margin: 40px 12px;
+    }
+    .uni-main {
+        margin: 20px auto;
+    }
+}
+
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-family: "Georgia", "Times New Roman", serif;
+    letter-spacing: 0.5px;
+}
+
+#welcome-message {
+    color: var(--muted);
+    font-size: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+}
+
+th {
+    background: linear-gradient(90deg, var(--brand), var(--brand-2));
+    color: white;
+    font-weight: 700;
+}
+
+tr:hover td {
+    background: #f8fbff;
+}
+
+.status-green {
+    color: white;
+    background: var(--ok);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.status-red {
+    color: white;
+    background: var(--warn);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.action-button {
+    padding: 8px 12px;
+    background: var(--brand);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.action-button:hover {
+    background: var(--brand-2);
+    transform: translateY(-1px);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+    #layout { flex-direction: column; }
+    #sidebar { width: 100%; }
+    #content { padding: 12px; }
+    .card { margin: 12px auto; }
+}
