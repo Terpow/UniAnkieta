@@ -17,6 +17,7 @@ from app.core.auth_service import authenticate_or_create_user
 # Импорт роутеров
 from app.api.auth import router as auth_router
 from app.api.admin import router as admin_router
+from app.api.tours import router as tours_router
 
 load_dotenv()
 
@@ -57,6 +58,7 @@ app.add_middleware(
 # --- 4. ПОДКЛЮЧЕНИЕ РОУТЕРОВ ---
 app.include_router(auth_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
+app.include_router(tours_router, prefix="/api/admin") # Делаем префикс /api/admin/tours
 
 # --- 5. СИСТЕМНЫЕ ЭНДПОИНТЫ ---
 
