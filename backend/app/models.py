@@ -1,6 +1,10 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime, Boolean
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -37,3 +41,21 @@ class Subject(Base):
     name = Column(String, unique=True, nullable=False)
     
     groups = relationship("Group", secondary=group_subject_association, back_populates="subjects")
+
+# --- ШАГ 1: МОДЕЛЬ ДЛЯ УПРАВЛЕНИЯ ТУРАМИ ---
+
+class SurveyTour(Base):
+    __tablename__ = "survey_tours"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True, nullable=False) # Например: "Зимняя сессия 2025"
+    
+    # Сроки проведения анкетирования
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+    
+    # Флаг активности (админ может выключить туру вручную раньше срока)
+    is_active = Column(Boolean, default=True)
+
+    # Техническое поле: когда была создана запись
+    created_at = Column(DateTime, default=datetime.utcnow)
