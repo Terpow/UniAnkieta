@@ -1,12 +1,11 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime, Boolean
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+import enum
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime, Boolean, Enum as SQLEnum
+from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
+
+# --- ВСПОМОГАТЕЛЬНЫЕ ТАБЛИЦЫ ---
 
 # Таблица для связи "Многие ко многим" между Группами и Предметами
 group_subject_association = Table(
@@ -16,10 +15,12 @@ group_subject_association = Table(
     Column("subject_id", ForeignKey("subjects.id"), primary_key=True),
 )
 
+# --- БАЗОВЫЕ МОДЕЛИ (Группы, Пользователи, Предметы) ---
+
 class Group(Base):
     __tablename__ = "groups"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, nullable=False) # Например, "Informatyka-1"
+    name = Column(String, unique=True, nullable=False)
     
     users = relationship("User", back_populates="group")
     subjects = relationship("Subject", secondary=group_subject_association, back_populates="groups")
@@ -29,7 +30,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    role = Column(String, default="Student") # Student, Teacher, Admin
+    role = Column(String, default="Student") 
     sso_id = Column(String, unique=True, index=True, nullable=True)
     
     group_id = Column(Integer, ForeignKey("groups.id"))
@@ -42,20 +43,38 @@ class Subject(Base):
     
     groups = relationship("Group", secondary=group_subject_association, back_populates="subjects")
 
-# --- ШАГ 1: МОДЕЛЬ ДЛЯ УПРАВЛЕНИЯ ТУРАМИ ---
+# --- МОДЕЛЬ ДЛЯ УПРАВЛЕНИЯ ТУРАМИ (UC-01) ---
 
 class SurveyTour(Base):
     __tablename__ = "survey_tours"
-
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False) # Например: "Зимняя сессия 2025"
-    
-    # Сроки проведения анкетирования
+    name = Column(String, index=True, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
-    
-    # Флаг активности (админ может выключить туру вручную раньше срока)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+# --- НОВЫЕ МОДЕЛИ ДЛЯ КРЕАТОРА ШАБЛОНОВ (UC-30) ---
+
+class QuestionType(str, enum.Enum):
+    OPEN = "open"      # Открытый вопрос (текстовый ответ)
+    CLOSED = "closed"  # Закрытый вопрос (выбор из вариантов)
+
+class Question(Base):
+    __tablename__ = "questions"
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String, nullable=False)
+    question_type = Column(SQLEnum(QuestionType), nullable=False)
     is_active = Column(Boolean, default=True)
 
-    # Техническое поле: когда была создана запись
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # Связь с вариантами ответов (только для CLOSED)
+    # cascade="all, delete-orphan" удалит варианты, если удалить сам вопрос
+    choices = relationship("QuestionChoice", back_populates="question", cascade="all, delete-orphan")
+
+class QuestionChoice(Base):
+    __tablename__ = "question_choices"
+    id = Column(Integer, primary_key=True, index=True)
+    question_id = Column(Integer, ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
+    text = Column(String, nullable=False)
+
+    question = relationship("Question", back_populates="choices")

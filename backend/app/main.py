@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from fastapi.openapi.utils import get_openapi # Добавили импорт
 
 # Импорты вашего проекта
 from app.database import engine, get_db
@@ -15,11 +14,12 @@ from app import models
 from app.core.security import create_access_token
 from app.core.auth_service import authenticate_or_create_user
 
-# Импорт роутеров
+# --- ИМПОРТ РОУТЕРОВ ---
 from app.api.auth import router as auth_router
 from app.api.admin import router as admin_router
 from app.api.usos import router as usos_router
 from app.api.tours import router as tours_router
+from app.api.questions import router as questions_router # Добавили наш новый роутер
 
 load_dotenv()
 
@@ -60,8 +60,11 @@ app.add_middleware(
 # --- 4. ПОДКЛЮЧЕНИЕ РОУТЕРОВ ---
 app.include_router(auth_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
-app.include_router(usos_router, prefix="/api") # Врубаем наш импорт USOS!
-app.include_router(tours_router, prefix="/api/admin") # Делаем префикс /api/admin/tours
+app.include_router(usos_router, prefix="/api") 
+
+# Админские роутеры (сгруппированы под префиксом /api/admin)
+app.include_router(tours_router, prefix="/api/admin/tours", tags=["Tour Management"])
+app.include_router(questions_router, prefix="/api/admin/questions", tags=["Question Templates"])
 
 # --- 5. СИСТЕМНЫЕ ЭНДПОИНТЫ ---
 
