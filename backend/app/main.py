@@ -6,7 +6,7 @@ from sqlalchemy.exc import OperationalError
 from dotenv import load_dotenv
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.utils import get_openapi # Добавили импорт
+from fastapi.openapi.utils import get_openapi
 
 # Импорты вашего проекта
 from app.database import engine, get_db
@@ -17,7 +17,7 @@ from app.core.auth_service import authenticate_or_create_user
 # Импорт роутеров
 from app.api.auth import router as auth_router
 from app.api.admin import router as admin_router
-from app.api.tours import router as tours_router
+from app.api.usos import router as usos_router
 
 load_dotenv()
 
@@ -58,7 +58,7 @@ app.add_middleware(
 # --- 4. ПОДКЛЮЧЕНИЕ РОУТЕРОВ ---
 app.include_router(auth_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
-app.include_router(tours_router, prefix="/api/admin") # Делаем префикс /api/admin/tours
+app.include_router(usos_router, prefix="/api") # Врубаем наш импорт USOS!
 
 # --- 5. СИСТЕМНЫЕ ЭНДПОИНТЫ ---
 
