@@ -1,17 +1,16 @@
 import './style.css'
 import { buildLoginUI, handleSSOCallback, getToken, getRoleFromToken, clearToken } from './login.js'
-import { renderAdminUsersPage } from './adminUsers.js' // Импортируем страницу управления пользователями
+import { renderAdminUsersPage } from './adminUsers.js'
+// ИМПОРТ НОВЫХ СТРАНИЦ (Проверь названия файлов!)
+import { renderAdminQuestionsPage } from './TemplateEditor.js' 
+import { renderAdminToursPage } from './ToursManager.js'
 
-// Данные для студенческого интерфейса (заглушка)
 const surveys = [
   { subject: 'Podstawy Programowania', lecturer: 'dr inż. Jan Kowalski', status: 'Wypełniona' },
   { subject: 'Analiza Matematyczna I', lecturer: 'prof. dr hab. Ewa Nowak', status: 'Oczekuje' },
   { subject: 'Sieci Komputerowe', lecturer: 'mgr Anna Lis', status: 'Oczekuje' }
 ];
 
-/**
- * Отрисовка интерфейса СТУДЕНТА
- */
 function renderSurveyApp() {
   document.querySelector('#app').innerHTML = `
     <div class="uni-app">
@@ -49,7 +48,7 @@ function renderSurveyApp() {
 }
 
 /**
- * Отрисовка ГЛАВНОЙ ПАНЕЛИ АДМИНИСТРАТОРА
+ * ОБНОВЛЕННАЯ ПАНЕЛЬ АДМИНИСТРАТОРА (Спринт 3)
  */
 function renderAdminPanel() {
   document.querySelector('#app').innerHTML = `
@@ -66,95 +65,79 @@ function renderAdminPanel() {
       <main class="uni-main">
         <div class="card">
           <h2>Panel Administratora</h2>
-          <p style="color: green;">● Połączono z bazą PostgreSQL (Docker)</p>
+          <p style="color: #2ecc71; font-weight: bold;">● Połączono z bazą PostgreSQL (Docker)</p>
           <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+          
           <div class="admin-tools">
-             <strong>Dostępne operacje:</strong>
-             <ul style="margin-top: 10px; list-style: none; padding: 0;">
-                <li style="margin-bottom: 15px;">
-                  <button id="btn-manage-users" class="action-button small" style="background: #3498db; width: 100%; text-align: left; padding: 10px;">
+             <strong>Dostępne operacje (Sprint 3):</strong>
+             <ul style="margin-top: 15px; list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">
+                <li>
+                  <button id="btn-manage-users" class="action-button" style="background: #3498db; width: 100%; text-align: left; padding: 12px;">
                     👥 Zarządzaj użytkownikami (RBAC)
                   </button>
                 </li>
-                <li style="margin-bottom: 10px; color: #7f8c8d;">📝 Zarządzanie listą ankiet (CRUD) - <i>Wkrótce</i></li>
-                <li style="margin-bottom: 10px; color: #7f8c8d;">📊 Eksport wyników do CSV - <i>Wkrótce</i></li>
+                <li>
+                  <button id="btn-manage-questions" class="action-button" style="background: #9b59b6; width: 100%; text-align: left; padding: 12px;">
+                    📝 Edytor pytań i szablonów (UC-31)
+                  </button>
+                </li>
+                <li>
+                  <button id="btn-manage-tours" class="action-button" style="background: #f1c40f; color: #2c3e50; width: 100%; text-align: left; padding: 12px;">
+                    🗓️ Zarządzanie turami ankiet (UC-01)
+                  </button>
+                </li>
+                <li style="color: #bdc3c7; padding: 12px; border: 1px dashed #ddd; border-radius: 4px;">
+                  📊 Eksport wyników do CSV - <i>Wkrótce</i>
+                </li>
              </ul>
           </div>
         </div>
       </main>
     </div>`;
 
-  // Навешиваем событие на кнопку перехода к списку пользователей
-  document.getElementById('btn-manage-users')?.addEventListener('click', () => {
-    renderAdminUsersPage();
-  });
+  // Навешиваем события на все кнопки
+  document.getElementById('btn-manage-users')?.addEventListener('click', () => renderAdminUsersPage());
+  document.getElementById('btn-manage-questions')?.addEventListener('click', () => renderAdminQuestionsPage());
+  document.getElementById('btn-manage-tours')?.addEventListener('click', () => renderAdminToursPage());
 
   setupLogout();
 }
 
-/**
- * Наполнение таблицы анкет для студента
- */
 function loadSurveys() {
   const body = document.getElementById('survey-body');
   if (!body) return;
-
   body.innerHTML = surveys.map(s => `
     <tr>
       <td><strong>${s.subject}</strong></td>
       <td>${s.lecturer}</td>
-      <td>
-        <span class="status-badge ${s.status === 'Wypełniona' ? 'status-green' : 'status-red'}">
-          ${s.status}
-        </span>
-      </td>
-      <td>
-        ${s.status === 'Oczekuje' ? '<button class="action-button small">Wypełnij</button>' : '—'}
-      </td>
+      <td><span class="status-badge ${s.status === 'Wypełniona' ? 'status-green' : 'status-red'}">${s.status}</span></td>
+      <td>${s.status === 'Oczekuje' ? '<button class="action-button small">Wypełnij</button>' : '—'}</td>
     </tr>
   `).join('');
 }
 
-/**
- * Функция выхода из системы
- */
 function setupLogout() {
   document.getElementById('logout-btn')?.addEventListener('click', () => {
     clearToken();
-    localStorage.clear(); // Полная очистка для надежности
+    localStorage.clear();
     window.location.href = '/';
   });
 }
 
-/**
- * Точка входа в приложение (Инициализация)
- */
 function initApp() {
-  // 1. Обработка возврата из SSO (если есть токен в URL)
   const callbackRole = handleSSOCallback();
-  
-  // 2. Получение текущего токена
   const token = getToken();
-  
-  // 3. Определение роли (из URL или из сохраненного JWT)
   let role = callbackRole || (token ? getRoleFromToken(token) : null);
 
-  // Приведение к нижнему регистру для надежности проверки
   if (role) role = role.toLowerCase();
 
-  console.log("Current User Role:", role);
-
   if (!role) {
-    // Если роли нет — показываем экран входа
     buildLoginUI(document.querySelector('#app'));
   } else if (role === 'admin' || role === 'administrator') {
-    // Если админ — показываем панель управления
     renderAdminPanel();
   } else {
-    // Все остальные (student, teacher) — в интерфейс анкет
     renderSurveyApp();
   }
 }
 
-// Запуск приложения
 initApp();
