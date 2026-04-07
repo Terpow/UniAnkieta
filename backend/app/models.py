@@ -1,4 +1,5 @@
 import enum
+import uuid
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime, Boolean, Enum as SQLEnum
 from sqlalchemy.orm import relationship, declarative_base
@@ -78,3 +79,15 @@ class QuestionChoice(Base):
     text = Column(String, nullable=False)
 
     question = relationship("Question", back_populates="choices")
+
+class SurveyToken(Base):
+    __tablename__ = "survey_tokens"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    tour_id = Column(Integer, ForeignKey("survey_tours.id", ondelete="CASCADE"), nullable=False)
+    token = Column(String, unique=True, index=True, default=lambda: str(uuid.uuid4()))
+    is_used = Column(Boolean, default=False)
+
+    # Связи для удобства (опционально)
+    user = relationship("User")
+    tour = relationship("SurveyTour")
