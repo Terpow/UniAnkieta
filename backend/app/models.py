@@ -91,3 +91,15 @@ class SurveyToken(Base):
     # Связи для удобства (опционально)
     user = relationship("User")
     tour = relationship("SurveyTour")
+
+class Answer(Base):
+    __tablename__ = "answers"
+    id = Column(Integer, primary_key=True, index=True)
+    # Связь с вопросом, чтобы знать, на что ответили
+    question_id = Column(Integer, ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
+    # Само значение ответа (текст или ID выбранного варианта)
+    value = Column(String, nullable=False)
+    # Время ответа
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    question = relationship("Question")

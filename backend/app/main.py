@@ -1,5 +1,6 @@
 import os
 import time
+from app.api.responses import router as responses_router
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
@@ -59,6 +60,7 @@ app.add_middleware(
 
 # --- 4. ПОДКЛЮЧЕНИЕ РОУТЕРОВ ---
 app.include_router(auth_router, prefix="/api")
+app.include_router(responses_router) 
 app.include_router(admin_router, prefix="/api")
 app.include_router(usos_router, prefix="/api") 
 
