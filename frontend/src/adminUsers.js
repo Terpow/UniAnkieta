@@ -1,226 +1,180 @@
-import { getRoleFromToken, getToken, clearToken } from './login.js';
+// adminUsers.js – Admin user management (UC-35)
+import { apiRequest } from './api.js';
+import { clearToken } from './login.js';
 
-const API_BASE_URL = 'http://localhost:8000/api';
-const USERS_URL = `${API_BASE_URL}/admin/users`;
+const ROLE_OPTIONS = ['Admin', 'Teacher', 'Student'];
 
-const ROLE_OPTIONS = [
-  { value: 'Admin', label: 'Admin' },
-  { value: 'Teacher', label: 'Teacher' },
-  { value: 'Student', label: 'Student' }
-];
-
-const ROLE_CLASS = {
-  admin: 'role-admin',
-  teacher: 'role-teacher',
-  student: 'role-student'
+const ROLE_BADGE = {
+  admin:   { cls: 'badge-blue',  label: 'Admin'   },
+  teacher: { cls: 'badge-amber', label: 'Teacher' },
+  student: { cls: 'badge-green', label: 'Student' }
 };
 
 function normalizeRole(role) {
-  return role ? String(role).toLowerCase() : '';
+  return role ? String(role).toLowerCase() : 'student';
 }
 
-function getStoredToken() {
-  return localStorage.getItem('access_token') || getToken();
-}
-
-function getAuthHeader() {
-  const token = getStoredToken();
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
-}
-
-function setLoading(isLoading) {
-  const loader = document.getElementById('admin-users-loading');
-  if (!loader) return;
-  loader.classList.toggle('hidden', !isLoading);
-}
-
-function setStatus(message, tone = 'info') {
-  const el = document.getElementById('admin-users-status');
-  if (!el) return;
-  el.textContent = message;
-  el.dataset.tone = tone;
+function buildNav(email = '') {
+  const initials = email ? email.slice(0, 2).toUpperCase() : 'AD';
+  return `
+    <nav class="topnav">
+      <div class="topnav__brand">
+        <div class="topnav__logo">🏛️</div>
+        <span class="topnav__name">UniAnkieta</span>
+      </div>
+      <div class="topnav__right">
+        <div class="topnav__user">
+          <div class="topnav__avatar">${initials}</div>
+          <span class="role-tag role-tag-admin">Admin</span>
+        </div>
+        <button id="back-to-admin" class="btn btn-ghost btn-sm">← Powrót</button>
+        <button id="logout-btn" class="btn btn-ghost btn-sm">Wyloguj</button>
+      </div>
+    </nav>
+  `;
 }
 
 function renderUsersTable(users) {
-  const tbody = document.getElementById('admin-users-body');
+  const tbody = document.getElementById('users-tbody');
   if (!tbody) return;
 
-  tbody.innerHTML = users.map(user => {
-    const currentRole = user.role || 'Student';
-    const roleKey = normalizeRole(currentRole);
-    const roleClass = ROLE_CLASS[roleKey] || 'role-student';
+  if (!users || users.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4">
+          <div class="empty-state" style="padding:32px">
+            <div class="empty-state__icon">👥</div>
+            <h3>Brak użytkowników</h3>
+            <p>System nie zawiera jeszcze żadnych użytkowników.</p>
+          </div>
+        </td>
+      </tr>`;
+    return;
+  }
 
-    const options = ROLE_OPTIONS.map(option => {
-      const selected = option.value === currentRole ? 'selected' : '';
-      return `<option value="${option.value}" ${selected}>${option.label}</option>`;
-    }).join('');
+  tbody.innerHTML = users.map((user) => {
+    const roleKey = normalizeRole(user.role);
+    const badge = ROLE_BADGE[roleKey] || ROLE_BADGE.student;
+    const options = ROLE_OPTIONS.map((r) =>
+      `<option value="${r}" ${r === user.role ? 'selected' : ''}>${r}</option>`
+    ).join('');
 
     return `
       <tr>
-        <td>${user.id}</td>
-        <td>${user.email}</td>
-        <td><span class="role-badge ${roleClass}">${currentRole}</span></td>
+        <td><code style="color:var(--brand); font-weight:700;">#${user.id}</code></td>
+        <td style="font-weight:500;">${escapeHtml(user.email)}</td>
+        <td><span class="badge ${badge.cls}">${badge.label}</span></td>
         <td>
-          <div class="role-actions">
+          <div style="display:flex; gap:8px; align-items:center;">
             <select class="role-select" data-user-id="${user.id}">
               ${options}
             </select>
-            <button class="action-button" data-user-id="${user.id}">Zmień rolę</button>
+            <button class="btn btn-secondary btn-sm save-role-btn" data-user-id="${user.id}">
+              Zapisz
+            </button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
 
-  const buttons = Array.from(tbody.querySelectorAll('button[data-user-id]'));
-  buttons.forEach(button => {
-    button.addEventListener('click', async () => {
-      const userId = button.dataset.userId;
+  tbody.querySelectorAll('.save-role-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const userId = btn.dataset.userId;
       const select = tbody.querySelector(`select[data-user-id="${userId}"]`);
       if (!select) return;
-      await updateRole(userId, select.value);
+      await updateRole(userId, select.value, btn);
     });
   });
 }
 
-async function fetchUsers() {
-  const token = getStoredToken();
-  if (!token) {
-    setStatus('Brak tokenu. Zaloguj się ponownie.', 'error');
-    return;
-  }
+function escapeHtml(v) {
+  return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-  setLoading(true);
-  setStatus('');
+function showStatus(msg, type = 'info') {
+  const el = document.getElementById('users-status');
+  if (!el) return;
+  if (!msg) { el.innerHTML = ''; return; }
+  const cls = { info: 'alert-info', success: 'alert-success', error: 'alert-error' }[type] || 'alert-info';
+  el.innerHTML = `<div class="alert ${cls}">${msg}</div>`;
+}
+
+async function fetchUsers() {
+  const tbody = document.getElementById('users-tbody');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="4"><div class="loader"><div class="spinner"></div></div></td></tr>`;
 
   try {
-    const response = await fetch(USERS_URL, {
-      method: 'GET',
-      headers: { ...getAuthHeader() }
-    });
-
-    if (!response.ok) {
-      setStatus(`Błąd ładowania użytkowników (${response.status}).`, 'error');
-      return;
-    }
-
-    const users = await response.json();
+    const users = await apiRequest('/api/admin/users');
     renderUsersTable(users);
-    setStatus(`Użytkowników w bazie: ${users.length}.`, 'success');
+    showStatus(`Załadowano ${users.length} użytkowników.`, 'success');
+    setTimeout(() => showStatus(''), 3000);
   } catch (err) {
-    console.error(err);
-    setStatus('Nie udało się połączyć z serwerem.', 'error');
-  } finally {
-    setLoading(false);
+    showStatus(`Błąd: ${err.message}`, 'error');
   }
 }
 
-async function updateRole(userId, roleName) {
-  const token = getStoredToken();
-  if (!token) return;
-
-  setLoading(true);
-  setStatus('Aktualizacja roli...', 'info');
+async function updateRole(userId, roleName, btn) {
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '…';
 
   try {
-    const response = await fetch(`${USERS_URL}/${userId}/role?new_role=${encodeURIComponent(roleName)}`, {
-      method: 'PATCH',
-      headers: { ...getAuthHeader() }
-    });
-
-    if (!response.ok) {
-      setStatus('Błąd podczas zmiany roli.', 'error');
-      return;
-    }
-
-    setStatus('Rola zaktualizowana!', 'success');
+    await apiRequest(`/api/admin/users/${userId}/role?new_role=${encodeURIComponent(roleName)}`, 'PATCH');
+    window.showToast?.(`Rola użytkownika #${userId} zmieniona na ${roleName}.`, 'success');
     await fetchUsers();
   } catch (err) {
-    console.error(err);
-    setStatus('Błąd serwera.', 'error');
-  } finally {
-    setLoading(false);
+    window.showToast?.(`Błąd: ${err.message}`, 'error');
+    btn.disabled = false;
+    btn.textContent = original;
   }
 }
 
-export function renderAdminUsersPage(initialRole = null) {
-  const token = getStoredToken();
-  const role = initialRole || (token ? getRoleFromToken(token) : null);
-
-  if (normalizeRole(role) !== 'admin') {
-    window.location.href = '/';
-    return;
-  }
-
+export function renderAdminUsersPage(callerRole = null) {
   const app = document.querySelector('#app');
   if (!app) return;
 
   app.innerHTML = `
-    <div class="uni-app">
-      <header class="uni-header">
-        <div class="uni-header__inner">
-          <div class="uni-logo">
-            <div class="uni-logo__icon">🧭</div>
-            <div>
-              <h1>UniAnkieta</h1>
-              <p>Zarządzanie użytkownikami</p>
-            </div>
+    ${buildNav()}
+    <main class="app-main">
+      <div class="page-header">
+        <h1>Zarządzanie użytkownikami</h1>
+        <p>Przeglądaj i zmieniaj role wszystkich kont w systemie.</p>
+      </div>
+      <div id="users-status"></div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h3>Lista użytkowników</h3>
+            <p>Kliknij "Zapisz" aby zatwierdzić zmianę roli.</p>
           </div>
-          <div class="admin-header-actions">
-            <button id="back-to-admin" class="admin-link" style="background:none; border:none; color:white; cursor:pointer; text-decoration:underline; margin-right: 15px;">
-              ← Powrót do menu
-            </button>
-            <button id="logout" class="logout-button">Wyloguj</button>
-          </div>
+          <button class="btn btn-secondary btn-sm" id="refresh-users-btn">🔄 Odśwież</button>
         </div>
-      </header>
-
-      <main class="uni-main">
-        <section class="uni-panel">
-          <div class="card">
-            <div class="admin-users-header">
-              <div>
-                <h2>Lista użytkowników</h2>
-                <p class="muted">Zmień uprawnienia osób w systemie.</p>
-              </div>
-              <div id="admin-users-loading" class="spinner hidden"></div>
-            </div>
-            <div id="admin-users-status" class="status-message"></div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Email</th>
-                    <th>Obecna rola</th>
-                    <th>Zmień na...</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-users-body"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer class="uni-footer">
-        <p>© 2026 UniAnkieta • Panel administracyjny</p>
-      </footer>
-    </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:60px">ID</th>
+                <th>Email</th>
+                <th>Rola</th>
+                <th>Zmień rolę</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="4"><div class="loader"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
   `;
 
-  // Обработчик кнопки выхода
-  document.getElementById('logout')?.addEventListener('click', () => {
-    localStorage.clear();
+  document.getElementById('back-to-admin')?.addEventListener('click', () => window.location.reload());
+  document.getElementById('refresh-users-btn')?.addEventListener('click', fetchUsers);
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
     clearToken();
-    window.location.href = '/login';
-  });
-
-  // Обработчик кнопки возврата в главное меню админа
-  document.getElementById('back-to-admin')?.addEventListener('click', () => {
-    // Самый надежный способ вернуться в главное меню, 
-    // инициализированное в main.js
-    window.location.reload(); 
+    localStorage.clear();
+    window.location.href = '/';
   });
 
   fetchUsers();

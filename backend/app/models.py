@@ -1,14 +1,14 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, DateTime, Boolean, Enum as SQLEnum
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
-# --- ВСПОМОГАТЕЛЬНЫЕ ТАБЛИЦЫ ---
+# --- ASSOCIATION TABLES ---
 
-# Таблица для связи "Многие ко многим" между Группами и Предметами
+# Many-to-Many relationship table between Groups and Subjects
 group_subject_association = Table(
     "group_subjects",
     Base.metadata,
@@ -16,7 +16,7 @@ group_subject_association = Table(
     Column("subject_id", ForeignKey("subjects.id"), primary_key=True),
 )
 
-# --- БАЗОВЫЕ МОДЕЛИ (Группы, Пользователи, Предметы) ---
+# --- CORE MODELS (Groups, Users, Subjects) ---
 
 class Group(Base):
     __tablename__ = "groups"
@@ -44,7 +44,7 @@ class Subject(Base):
     
     groups = relationship("Group", secondary=group_subject_association, back_populates="subjects")
 
-# --- МОДЕЛЬ ДЛЯ УПРАВЛЕНИЯ ТУРАМИ (UC-01) ---
+# --- TOUR MANAGEMENT MODEL (UC-01) ---
 
 class SurveyTour(Base):
     __tablename__ = "survey_tours"
@@ -53,13 +53,13 @@ class SurveyTour(Base):
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-# --- НОВЫЕ МОДЕЛИ ДЛЯ КРЕАТОРА ШАБЛОНОВ (UC-30) ---
+# --- QUESTION TEMPLATE MODELS (UC-30) ---
 
 class QuestionType(str, enum.Enum):
-    OPEN = "open"      # Открытый вопрос (текстовый ответ)
-    CLOSED = "closed"  # Закрытый вопрос (выбор из вариантов)
+    OPEN = "open"      # Open-ended question (text response)
+    CLOSED = "closed"  # Closed-ended question (multiple choice)
 
 class Question(Base):
     __tablename__ = "questions"
@@ -68,8 +68,8 @@ class Question(Base):
     question_type = Column(SQLEnum(QuestionType), nullable=False)
     is_active = Column(Boolean, default=True)
 
-    # Связь с вариантами ответов (только для CLOSED)
-    # cascade="all, delete-orphan" удалит варианты, если удалить сам вопрос
+    # Relationship with answer choices (only for CLOSED type)
+    # cascade="all, delete-orphan" removes choices if the question is deleted
     choices = relationship("QuestionChoice", back_populates="question", cascade="all, delete-orphan")
 
 class QuestionChoice(Base):
@@ -80,6 +80,8 @@ class QuestionChoice(Base):
 
     question = relationship("Question", back_populates="choices")
 
+# --- ANONYMIZATION & RESPONSE MODELS (UC-05) ---
+
 class SurveyToken(Base):
     __tablename__ = "survey_tokens"
     id = Column(Integer, primary_key=True, index=True)
@@ -88,18 +90,18 @@ class SurveyToken(Base):
     token = Column(String, unique=True, index=True, default=lambda: str(uuid.uuid4()))
     is_used = Column(Boolean, default=False)
 
-    # Связи для удобства (опционально)
+    # Helper relationships
     user = relationship("User")
     tour = relationship("SurveyTour")
 
 class Answer(Base):
     __tablename__ = "answers"
     id = Column(Integer, primary_key=True, index=True)
-    # Связь с вопросом, чтобы знать, на что ответили
+    # Link to the question to identify what is being answered
     question_id = Column(Integer, ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
-    # Само значение ответа (текст или ID выбранного варианта)
+    # The actual response value (text or choice ID)
     value = Column(String, nullable=False)
-    # Время ответа
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # Timestamp of the response
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     question = relationship("Question")
