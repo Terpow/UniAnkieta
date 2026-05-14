@@ -1,63 +1,92 @@
 # UniAnkieta 🎓
 Проект системы анкетирования для университета.
 
-## 🚀 Как запустить (UC-01)
-1. Установи **Docker Desktop**.
-2. В корне проекта выполни: 
-   ```
+```
+
+---
+
+## 🐳 Przydatne komendy Docker
+
+*   **Zatrzymanie projektu:** `docker-compose down`
+*   **Wyczyszczenie bazy i kontenerów:** `docker-compose down -v`
+*   **Podgląd logów backendu:** `docker-compose logs -f app`
+
+### Co zostało dodane:
+1.  **Linki do Frontendu i Swaggera:** Żeby nie musieć pamiętać portów (`8000` i `5173`).
+2.  **Instrukcja dotycząca tokena:** To najczęstszy punkt, w którym wszyscy się gubią.
+3.  **Komendy do bazy danych:** Te same, które testowaliśmy. Teraz każdy z zespołu może nadać sobie upOto tłumaczenie Twojego pliku README na język polski, z zachowaniem technicznego żargonu i przejrzystego formatowania:
+
+---
+
+# UniAnkieta 🎓
+Projekt systemu ankietowego dla uniwersytetu.
+
+## 🚀 Jak uruchomić (UC-01)
+1. Zainstaluj **Docker Desktop**.
+2. W głównym folderze projektu wykonaj:  
+   ```bash
    docker-compose up --build
-````
-
-3.  **Backend API (Swagger):** [http://localhost:8000/docs](https://www.google.com/search?q=http://localhost:8000/docs)
-4.  **Frontend:** [http://localhost:5173](https://www.google.com/search?q=http://localhost:5173)
-
------
-
-## 🔐 Авторизация (Тестирование)
-
-Для эмуляции входа через SSO университета:
-
-1.  Перейди по ссылке: `http://localhost:8000/api/auth/login`
-2.  Скопируй токен из адресной строки браузера.
-3.  В **Swagger** нажми кнопку **Authorize**, введи `Bearer` + твой\_токен.
-
------
-
-## 🛠 Работа с базой данных (PostgreSQL)
-
-Если нужно быстро проверить юзеров или выдать права админа через терминал:
-
-### 1\. Посмотреть всех пользователей (ID, Email, Role):
 
 ```
+
+3. **Backend API (Swagger):** [http://localhost:8000/docs](https://www.google.com/search?q=http://localhost:8000/docs)
+4. **Frontend:** [http://localhost:5173]()
+
+---
+
+## 🔐 Autoryzacja (Testowanie)
+
+Aby zasymulować logowanie przez uniwersyteckie SSO:
+
+1. Przejdź pod adres: `http://localhost:8000/api/auth/login`
+2. Skopiuj token z paska adresu przeglądarki.
+3. W **Swaggerze** kliknij przycisk **Authorize** i wpisz: `Bearer` + twój_token.
+
+---
+
+## 🛠 Praca z bazą danych (PostgreSQL)
+
+Jeśli chcesz szybko sprawdzić użytkowników lub nadać uprawnienia administratora przez terminal:
+
+### 1. Wyświetlenie wszystkich użytkowników (ID, Email, Role):
+
+```bash
 docker-compose exec db psql -U user -d uniankieta -c "SELECT id, sso_id, email, role FROM users;"
-```
-
-### 2\. Сделать пользователя Админом:
-
-*(Замени `ЧИСЛО` на ID из списка выше)*
 
 ```
-docker-compose exec db psql -U user -d uniankieta -c "UPDATE users SET role = 'Admin' WHERE id = ЧИСЛО;"
+
+### 2. Nadanie uprawnień Administratora:
+
+*(Zastąp `ID_UZYTKOWNIKA` numerem ID z listy powyżej)*
+
+```bash
+docker-compose exec db psql -U user -d uniankieta -c "UPDATE users SET role = 'Admin' WHERE id = ID_UZYTKOWNIKA;"
+
 ```
 
-### 3\. Разжаловать до Студента:
+### 3. Degradacja do roli Studenta:
+
+```bash
+docker-compose exec db psql -U user -d uniankieta -c "UPDATE users SET role = 'Student' WHERE id = ID_UZYTKOWNIKA;"
 
 ```
-docker-compose exec db psql -U user -d uniankieta -c "UPDATE users SET role = 'Student' WHERE id = ЧИСЛО;"
+
+---
+
+## 🐳 Przydatne komendy Docker
+
+* **Zatrzymanie projektu:** `docker-compose down`
+* **Wyczyszczenie bazy i kontenerów:** `docker-compose down -v`
+* **Podgląd logów backendu:** `docker-compose logs -f app`
+
+### Co zostało dodane:
+
+1. **Linki do Frontendu i Swaggera:** Żeby nie musieć pamiętać portów (`8000` i `5173`).
+2. **Instrukcja dotycząca tokena:** To najczęstszy punkt, w którym wszyscy się gubią.
+3. **Komendy do bazy danych:** Te same, które testowaliśmy. Teraz każdy z zespołu może nadać sobie uprawnienia admina w 5 sekund.
+
 ```
 
------
-
-## 🐳 Полезные команды Docker
-
-  * **Остановить проект:** `docker-compose down`
-  * **Очистить базу и контейнеры:** `docker-compose down -v`
-  * **Просмотр логов бэкенда:** `docker-compose logs -f app`
-
-### Что я добавил:
-1.  **Ссылки на Frontend и Swagger:** Чтобы не вспоминать порты (`8000` и `5173`).
-2.  **Инструкцию по токену:** Это самое частое место, где все путаются.
-3.  **Команды для БД:** Те самые, что мы проверили. Теперь любой из команды сможет сам себе выдать админку за 5 секунд.
+```
 
 
