@@ -12,7 +12,6 @@ let studentState = {
 
 let currentEmail = '';
 let currentRole = '';
-let currentDisplayName = '';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -128,7 +127,7 @@ function renderSurveyList() {
   renderLayout(`
     <div class="page-header">
       <h1>Moje Ankiety</h1>
-      <p>Добро пожаловать, <strong>${escapeHtml(currentDisplayName || currentEmail || 'uzytkowniku')}</strong>. Wybierz aktywna ture, aby przejsc do formularza oceny zajec.</p>
+      <p>Wybierz aktywną turę, aby przejść do formularza oceny zajęć.</p>
     </div>
     <div class="survey-grid">${cards}</div>
   `);
@@ -342,11 +341,8 @@ async function submitSurvey() {
   }
 }
 
-export function renderStudentSurveysPage(email = '', role = 'student', displayName = '') {
+export function renderStudentSurveysPage(email = '', role = 'student') {
   currentEmail = email;
   currentRole = role;
-  currentDisplayName = displayName || (email ? email.split('@')[0] : 'uzytkowniku');
   loadStudentSurveys();
 }
-
-

@@ -354,6 +354,7 @@ body {
 .btn-dev:hover { border-color: var(--brand-mid); background: var(--brand-soft); color: var(--brand); }
 .btn-dev-admin { border-color: #c4b5fd; }
 .btn-dev-admin:hover { border-color: #8b5cf6; background: #f5f3ff; color: #7c3aed; }
+.btn-dev-teacher { background: var(--amber, #f59e0b); color: #fff; }
 
 /* Alert messages */
 .alert {
@@ -1098,4 +1099,27 @@ body {
   margin-top: 32px;
   padding-top: 24px;
   border-top: 1px solid var(--line);
+}
+
+/* Увеличиваем сам квадратный контейнер */
+.login-hero__logo {
+  width: 100px;             /* Было 64px, увеличили до 100px */
+  height: 100px;            /* Было 64px */
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;      /* Сделали углы чуть более мягкими */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px;            /* Отступ внутри, чтобы лого не липло к краям */
+  overflow: hidden;
+}
+
+/* Растягиваем саму картинку внутри */
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;      /* Картинка заполнит всё место, сохраняя пропорции */
 }
