@@ -1,8 +1,9 @@
 // login.js – Auth helpers + Login UI
+import logoUrl from './assets/logo.png';
 export const TOKEN_KEY = 'uniankieta_jwt';
-export const USER_INFO_KEY = 'uniankieta_user_info';
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// JWT helpers
 function decodeJwt(token) {
   if (!token || token.split('.').length !== 3) return null;
   try {
@@ -15,25 +16,7 @@ function decodeJwt(token) {
 
 export const setToken = (token) => localStorage.setItem(TOKEN_KEY, token);
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
-
-export function setUserInfo(info) {
-  if (!info) return;
-  localStorage.setItem(USER_INFO_KEY, JSON.stringify(info));
-}
-
-export function getUserInfo() {
-  try {
-    const raw = localStorage.getItem(USER_INFO_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_INFO_KEY);
-}
+export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 export function getRoleFromToken(token) {
   const decoded = decodeJwt(token);
@@ -46,32 +29,34 @@ export function getUserInfoFromToken(token) {
   return decodeJwt(token);
 }
 
+// Handle SSO token from URL (?token=...)
 export function handleSSOCallback() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
   if (!token) return null;
   setToken(token);
-  // Refresh identity after SSO to avoid stale user info from previous login
-  localStorage.removeItem(USER_INFO_KEY);
   window.history.replaceState(null, '', window.location.pathname);
   return getRoleFromToken(token);
 }
 
+// Build the full login page
 export function buildLoginUI(container) {
   container.innerHTML = `
     <div class="login-page">
       <div class="login-hero">
-        <div class="login-hero__logo">🏛️</div>
+        <div class="login-hero__logo">
+          <img src="${logoUrl}" alt="UniAnkieta" class="logo-img">
+        </div>
         <h1>UniAnkieta</h1>
-        <p>System anonimowych ankiet studenckich - szybko, bezpiecznie, zgodnie z RODO.</p>
+        <p>System anonimowych ankiet studenckich — szybko, bezpiecznie, zgodnie z RODO.</p>
         <div class="login-hero__features">
           <div class="login-hero__feature">
             <div class="login-hero__feature-icon">🔒</div>
-            Pelna anonimizacja odpowiedzi
+            Pełna anonimizacja odpowiedzi
           </div>
           <div class="login-hero__feature">
             <div class="login-hero__feature-icon">📊</div>
-            Automatyczne raporty i statystyki
+            Automatyчные raporty i statystyki
           </div>
           <div class="login-hero__feature">
             <div class="login-hero__feature-icon">🎓</div>
@@ -83,12 +68,12 @@ export function buildLoginUI(container) {
       <div class="login-form-panel">
         <div class="login-box">
           <div class="login-box__header">
-            <h2>Zaloguj sie</h2>
-            <p>Wejdz na swoje konto lub skorzystaj z SSO uczelni.</p>
+            <h2>Zaloguj się</h2>
+            <p>Wejdź na swoje konto lub skorzystaj z SSO uczelni.</p>
           </div>
 
           <div class="login-tabs">
-            <button class="login-tab active" id="tab-email">Email &amp; Haslo</button>
+            <button class="login-tab active" id="tab-email">Email &amp; Hasło</button>
             <button class="login-tab" id="tab-register">Rejestracja</button>
           </div>
 
@@ -99,10 +84,12 @@ export function buildLoginUI(container) {
               <input class="form-input" type="email" id="login-email" placeholder="jan.kowalski@uczelnia.pl" autocomplete="email" />
             </div>
             <div class="form-group">
-              <label class="form-label" for="login-password">Haslo</label>
+              <label class="form-label" for="login-password">Hasło</label>
               <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
             </div>
-            <button class="btn btn-primary" id="login-submit-btn">Zaloguj sie</button>
+            <button class="btn btn-primary" id="login-submit-btn">
+              Zaloguj się
+            </button>
 
             <div class="form-divider">lub</div>
 
@@ -113,6 +100,7 @@ export function buildLoginUI(container) {
             <div class="form-divider" style="margin-top:24px; font-size:11px; color:var(--muted-2);">tryb deweloperski</div>
             <div class="dev-logins">
               <button class="btn-dev" id="dev-student-btn">🎓 Student</button>
+              <button class="btn-dev btn-dev-teacher" id="dev-teacher-btn">👩‍🏫 Teacher</button>
               <button class="btn-dev btn-dev-admin" id="dev-admin-btn">🛠️ Admin</button>
             </div>
           </div>
@@ -124,20 +112,22 @@ export function buildLoginUI(container) {
               <input class="form-input" type="email" id="reg-email" placeholder="jan.kowalski@uczelnia.pl" />
             </div>
             <div class="form-group">
-              <label class="form-label" for="reg-password">Haslo</label>
-              <input class="form-input" type="password" id="reg-password" placeholder="min. 8 znakow" />
+              <label class="form-label" for="reg-password">Hasło</label>
+              <input class="form-input" type="password" id="reg-password" placeholder="min. 8 znaków" />
             </div>
             <div class="form-group">
-              <label class="form-label" for="reg-password2">Powtorz haslo</label>
+              <label class="form-label" for="reg-password2">Powtórz hasło</label>
               <input class="form-input" type="password" id="reg-password2" placeholder="••••••••" />
             </div>
-            <button class="btn btn-primary" id="register-submit-btn">Utworz konto</button>
+            <button class="btn btn-primary" id="register-submit-btn">Utwórz konto</button>
           </div>
         </div>
       </div>
     </div>
   `;
 
+
+  // Tab switching
   const tabEmail = document.getElementById('tab-email');
   const tabRegister = document.getElementById('tab-register');
   const panelEmail = document.getElementById('panel-email');
@@ -157,18 +147,27 @@ export function buildLoginUI(container) {
     panelEmail.classList.add('hidden');
   });
 
+  // Allow Enter key to submit login
   const loginEmailInput = document.getElementById('login-email');
   const loginPasswordInput = document.getElementById('login-password');
   loginEmailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginPasswordInput.focus(); });
   loginPasswordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doEmailLogin(); });
 
+  // Email/Password login
   document.getElementById('login-submit-btn').addEventListener('click', doEmailLogin);
+
+  // SSO login
   document.getElementById('sso-login-btn').addEventListener('click', () => {
     window.location.href = `${API_URL}/api/auth/sso-login`;
   });
+
+  // Dev logins
   document.getElementById('dev-student-btn').addEventListener('click', () => doDevLogin('/api/auth/dev-login-student'));
   document.getElementById('dev-admin-btn').addEventListener('click', () => doDevLogin('/api/auth/dev-login-admin'));
+  document.getElementById('dev-teacher-btn').addEventListener('click', () => doDevLogin('/api/auth/dev-login-teacher'));
 
+  // Register
+  const regPasswordInput = document.getElementById('reg-password');
   const regPassword2Input = document.getElementById('reg-password2');
   regPassword2Input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doRegister(); });
   document.getElementById('register-submit-btn').addEventListener('click', doRegister);
@@ -177,10 +176,7 @@ export function buildLoginUI(container) {
 function setAlert(elementId, message, type = 'error') {
   const el = document.getElementById(elementId);
   if (!el) return;
-  if (!message) {
-    el.innerHTML = '';
-    return;
-  }
+  if (!message) { el.innerHTML = ''; return; }
   const icons = { error: '⚠️', success: '✅', info: 'ℹ️' };
   el.innerHTML = `<div class="alert alert-${type}">${icons[type]} ${message}</div>`;
 }
@@ -191,7 +187,7 @@ function setButtonLoading(btnId, loading, text = '') {
   btn.disabled = loading;
   if (loading) {
     btn.dataset.original = btn.textContent;
-    btn.textContent = 'Ladowanie...';
+    btn.textContent = 'Ładowanie...';
   } else {
     btn.textContent = text || btn.dataset.original || btn.textContent;
   }
@@ -202,7 +198,7 @@ async function doEmailLogin() {
   const password = document.getElementById('login-password')?.value;
 
   if (!email || !password) {
-    setAlert('login-alert', 'Wpisz email i haslo.', 'error');
+    setAlert('login-alert', 'Wpisz email i hasło.', 'error');
     return;
   }
 
@@ -219,15 +215,14 @@ async function doEmailLogin() {
     const data = await response.json();
 
     if (!response.ok) {
-      setAlert('login-alert', data.detail || 'Blad logowania.', 'error');
+      setAlert('login-alert', data.detail || 'Błąd logowania.', 'error');
       return;
     }
 
     setToken(data.access_token);
-    setUserInfo(data.user_info || null);
     window.location.reload();
   } catch {
-    setAlert('login-alert', 'Nie mozna polaczyc sie z serwerem.', 'error');
+    setAlert('login-alert', 'Nie można połączyć się z serwerem.', 'error');
   } finally {
     setButtonLoading('login-submit-btn', false);
   }
@@ -239,17 +234,17 @@ async function doRegister() {
   const password2 = document.getElementById('reg-password2')?.value;
 
   if (!email || !password) {
-    setAlert('register-alert', 'Wypelnij wszystkie pola.', 'error');
+    setAlert('register-alert', 'Wypełnij wszystkie pola.', 'error');
     return;
   }
 
   if (password !== password2) {
-    setAlert('register-alert', 'Hasla nie sa identyczne.', 'error');
+    setAlert('register-alert', 'Hasła nie są identyczne.', 'error');
     return;
   }
 
   if (password.length < 8) {
-    setAlert('register-alert', 'Haslo musi miec co najmniej 8 znakow.', 'error');
+    setAlert('register-alert', 'Hasło musi mieć co najmniej 8 znaków.', 'error');
     return;
   }
 
@@ -266,15 +261,14 @@ async function doRegister() {
     const data = await response.json();
 
     if (!response.ok) {
-      setAlert('register-alert', data.detail || 'Blad rejestracji.', 'error');
+      setAlert('register-alert', data.detail || 'Błąd rejestracji.', 'error');
       return;
     }
 
     setToken(data.access_token);
-    setUserInfo(data.user_info || null);
     window.location.reload();
   } catch {
-    setAlert('register-alert', 'Nie mozna polaczyc sie z serwerem.', 'error');
+    setAlert('register-alert', 'Nie można połączyć się z serwerem.', 'error');
   } finally {
     setButtonLoading('register-submit-btn', false);
   }
@@ -286,11 +280,8 @@ async function doDevLogin(endpoint) {
     const data = await response.json();
     if (!data.access_token) throw new Error('Brak tokenu.');
     setToken(data.access_token);
-    setUserInfo(data.user_info || null);
     window.location.reload();
   } catch {
-    alert('Blad polaczenia z backendem. Upewnij sie, ze serwer dziala.');
+    alert('Błąd połączenia z backendem. Upewnij się, że serwer działa.');
   }
 }
-
-
