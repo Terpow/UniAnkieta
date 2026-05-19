@@ -8,7 +8,7 @@ Projekt był realizowany w oparciu o metodykę zwinno-szablonową (Agile/Scrum).
 * **Sprinty 1-3:** Opracowanie architektury bazy danych, podstawowych modeli SQLAlchemy, mechanizmów autoryzacji JWT oraz struktury interfejsu SPA.
 * **Sprint 4:** Implementacja zarządzania edycjami ankiet (Survey Tours) oraz kreatora szablonów pytań otwartych i zamkniętych (UC-01, UC-30).
 * **Sprint 5 :** Dodanie zaawansowanego panelu analitycznego i eksportu danych, implementacja trybu deweloperskiego (Demo-mode login), pełna obsługa panelu zarządzania użytkownikami (UC-35) oraz końcowe testy integracyjne.
-* **Sprint 6:**  
+* **Sprint 6:** Stabilizacja systemu i finalne poprawki.
 
 ## Autorzy
 * **Zespół Projektowy UniAnkieta** (w ramach kursu Projekt Zespołowy Systemów Informatycznych 2026).
