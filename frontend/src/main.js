@@ -1,4 +1,4 @@
-// main.js – Application entry point  (Sprint 5 update)
+// main.js – Application entry point 
 import './style.css';
 import { buildLoginUI, handleSSOCallback, getToken, getRoleFromToken,
          clearToken, getUserInfoFromToken, TOKEN_KEY, API_URL } from './login.js';
@@ -7,8 +7,9 @@ import { renderAdminQuestionsPage }  from './TemplateEditor.js';
 import { renderAdminToursPage }      from './ToursManager.js';
 import { renderStudentSurveysPage }  from './studentSurveys.js';
 import { renderTeacherDashboard }    from './TeacherDashboard.js';   // Sprint 5
+import { renderTeacherPanel }        from './TeacherPanel.js';        // Sprint 6
 
-// ── Toast system ───────────────────────────────────────────────────────────
+//  Toast system
 function showToast(message, type = 'success') {
   let container = document.getElementById('toast-container');
   if (!container) {
@@ -30,7 +31,7 @@ function showToast(message, type = 'success') {
 }
 window.showToast = showToast;
 
-// ── Nav builder ────────────────────────────────────────────────────────────
+//  Nav builder 
 function buildTopNav(email, role) {
   const initials = email ? email.slice(0, 2).toUpperCase() : '??';
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
@@ -42,6 +43,9 @@ function buildTopNav(email, role) {
         <span class="topnav__name">UniAnkieta</span>
       </div>
       <div class="topnav__right">
+        <div id="notif-bell" class="notif-bell" title="Powiadomienia">
+          🔔 <span id="notif-count" class="notif-badge hidden">0</span>
+        </div>
         <div class="topnav__user">
           <div class="topnav__avatar">${initials}</div>
           <span class="topnav__user-email" style="font-size:13px; color:var(--muted)">${email}</span>
@@ -49,7 +53,8 @@ function buildTopNav(email, role) {
         </div>
         <button id="logout-btn" class="btn btn-ghost btn-sm">Wyloguj</button>
       </div>
-    </nav>`;
+    </nav>
+    <div id="notif-panel" class="notif-panel hidden"></div>`;
 }
 
 function setupLogout() {
@@ -58,7 +63,26 @@ function setupLogout() {
   });
 }
 
-// ── Admin panel ────────────────────────────────────────────────────────────
+async function loadNotifications() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return;
+  try {
+    const resp = await fetch(`${API_URL}/api/notifications`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const count = data.count || 0;
+    const badge = document.getElementById('notif-count');
+    if (badge) {
+      badge.textContent = count;
+      badge.classList.toggle('hidden', count === 0);
+    }
+    window._notifications = data.notifications || [];
+  } catch { /* silent */ }
+}
+
+// Admin panel
 function renderAdminPanel(email) {
   document.querySelector('#app').innerHTML = `
     ${buildTopNav(email, 'Admin')}
@@ -96,7 +120,6 @@ function renderAdminPanel(email) {
           <div class="dash-card__arrow">Przejdź →</div>
         </div>
 
-        <!-- Sprint 5: opens TeacherDashboard with real charts + CSV/PDF export -->
         <div class="dash-card" id="dash-export">
           <div class="dash-card__icon dash-card__icon-teal">📊</div>
           <div>
@@ -124,6 +147,24 @@ function renderAdminPanel(email) {
         </p>
       </div>
     </main>`;
+
+  setupLogout();
+  loadNotifications();
+
+  document.getElementById('notif-bell')?.addEventListener('click', () => {
+    const p = document.getElementById('notif-panel');
+    p?.classList.toggle('hidden');
+    if (!p?.classList.contains('hidden') && window._notifications) {
+      p.innerHTML = window._notifications.length
+        ? window._notifications.map(n =>
+            `<div class="notif-item notif-${n.priority}">
+              <div class="notif-item__icon">📋</div>
+              <div><div class="notif-item__title">${n.title}</div>
+              <div class="notif-item__body">${n.body}</div></div>
+            </div>`).join('')
+        : `<div class="notif-empty">Brak powiadomień 🎉</div>`;
+    }
+  });
 
   document.getElementById('dash-users').addEventListener('click', () => renderAdminUsersPage('Admin'));
   document.getElementById('dash-tours').addEventListener('click', () => renderAdminToursPage());
@@ -156,8 +197,6 @@ function renderAdminPanel(email) {
       showToast(err.message, 'error');
     }
   });
-
-  setupLogout();
 }
 
 // ── App initializer ────────────────────────────────────────────────────────
@@ -180,9 +219,9 @@ function initApp() {
     return;
   }
 
-  // Teacher → open stats dashboard directly
+  // Teacher → Sprint 6: full Teacher Panel instead of stats-only view
   if (role === 'teacher') {
-    renderTeacherDashboard(email);
+    renderTeacherPanel(email);
     return;
   }
 
