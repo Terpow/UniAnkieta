@@ -51,8 +51,8 @@
 | Pole | Wartość |
 |------|---------|
 | **Oczekiwany rezultat** | HTTP 200 · Tura widoczna na liście · Dane trwałe po odświeżeniu |
-| **Rzeczywisty rezultat** | *(wypełnić podczas testu)* |
-| **Wynik testu** | ☐ PASS · ☐ FAIL |
+| **Rzeczywisty rezultat** |Wszystkie kroki przebiegły prawidłowo. Po kliknięciu „Utwórz” DevTools → Network pokazał żądanie POST /api/admin/tours/ z odpowiedzią HTTP 200 OK. W odpowiedzi JSON znajdowały się poprawne dane nowej tury (id, name: "Ankieta semestralna – Test", start_date, end_date, is_active: true). Tura natychmiast pojawiła się na liście w panelu admina. Po odświeżeniu strony (F5) tura nadal była widoczna, co potwierdza trwały zapis w bazie danych.|
+| **Wynik testu** | ✔ PASS |
 
 ## Przypadki negatywne (do sprawdzenia przy okazji)
 
