@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
-# --- ASSOCIATION TABLES ---
+# ASSOCIATION TABLES 
 
 # Many-to-Many relationship table between Groups and Subjects
 group_subject_association = Table(
@@ -16,7 +16,7 @@ group_subject_association = Table(
     Column("subject_id", ForeignKey("subjects.id"), primary_key=True),
 )
 
-# --- CORE MODELS (Groups, Users, Subjects) ---
+#  CORE MODELS (Groups, Users, Subjects) 
 
 class Group(Base):
     __tablename__ = "groups"
@@ -44,7 +44,7 @@ class Subject(Base):
     
     groups = relationship("Group", secondary=group_subject_association, back_populates="subjects")
 
-# --- TOUR MANAGEMENT MODEL (UC-01) ---
+# TOUR MANAGEMENT MODEL (UC-01) 
 
 class SurveyTour(Base):
     __tablename__ = "survey_tours"
@@ -55,7 +55,7 @@ class SurveyTour(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-# --- QUESTION TEMPLATE MODELS (UC-30) ---
+#  QUESTION TEMPLATE MODELS (UC-30)
 
 class QuestionType(str, enum.Enum):
     OPEN = "open"      # Open-ended question (text response)
@@ -80,7 +80,7 @@ class QuestionChoice(Base):
 
     question = relationship("Question", back_populates="choices")
 
-# --- ANONYMIZATION & RESPONSE MODELS (UC-05) ---
+# ANONYMIZATION & RESPONSE MODELS (UC-05)
 
 class SurveyToken(Base):
     __tablename__ = "survey_tokens"

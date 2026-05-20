@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, List
-from .models import QuestionType  # Импортируем тип вопроса из моделей
+from .models import QuestionType  # Importing the question type from models
 
-# --- СХЕМЫ ДЛЯ ТУР (UC-01) ---
+# --- SURVEY TOUR SCHEMAS (UC-01) ---
 
 class SurveyTourCreate(BaseModel):
     name: str
@@ -27,9 +27,9 @@ class SurveyTourResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# --- СХЕМЫ ДЛЯ ВОПРОСОВ (UC-30) ---
+# QUESTION TEMPLATE SCHEMAS (UC-30) 
 
-# Схема для варианта ответа (только для закрытых вопросов)
+# Schema for answer choices (specifically for closed-ended questions)
 class QuestionChoiceSchema(BaseModel):
     id: int
     text: str
@@ -37,14 +37,14 @@ class QuestionChoiceSchema(BaseModel):
     class Config:
         from_attributes = True
 
-# Схема для создания вопроса
+# Schema for creating a new question
 class QuestionCreate(BaseModel):
-    text: str = Field(..., example="Как вы оцениваете сложность курса?")
+    text: str = Field(..., example="How would you rate the difficulty of this course?")
     question_type: QuestionType = Field(..., example="closed")
-    # Список строк для вариантов ответов (передаем только для closed)
-    choices: Optional[List[str]] = Field(default=[], example=["Легко", "Средне", "Сложно"])
+    # List of strings for answer choices (provided only for 'closed' type)
+    choices: Optional[List[str]] = Field(default=[], example=["Easy", "Medium", "Hard"])
 
-# Схема для ответа сервера (с ID и списком вариантов)
+# Schema for server response (includes ID and list of choices)
 class QuestionResponse(BaseModel):
     id: int
     text: str

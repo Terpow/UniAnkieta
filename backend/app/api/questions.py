@@ -8,27 +8,27 @@ from app.schemas import QuestionCreate, QuestionResponse
 
 router = APIRouter()
 
-# --- ЭНДПОИНТ: СОЗДАНИЕ ВОПРОСА ---
+# --- ENDPOINT: CREATE QUESTION ---
 @router.post("/", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
 def create_question(
     question_in: QuestionCreate, 
     db: Session = Depends(get_db)
 ):
     """
-    Создает новый шаблон вопроса.
-    - Если question_type == 'closed', нужно передать список 'choices'.
-    - Если 'open', список 'choices' будет проигнорирован.
+    Creates a new question template.
+    - If question_type == 'closed', a list of 'choices' must be provided.
+    - If 'open', the 'choices' list will be ignored.
     """
     
-    # 1. Валидация для закрытых вопросов
+    # 1. Validation for closed-ended questions
     if question_in.question_type == QuestionType.CLOSED:
         if not question_in.choices or len(question_in.choices) < 2:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Закрытый вопрос должен иметь хотя бы 2 варианта ответа (choices)."
+                detail="A closed-ended question must have at least 2 answer choices."
             )
     
-    # 2. Создаем сам объект вопроса
+    # 2. Create the question object
     new_question = Question(
         text=question_in.text,
         question_type=question_in.question_type,
@@ -39,7 +39,7 @@ def create_question(
     db.commit()
     db.refresh(new_question)
 
-    # 3. Если вопрос закрытый, сохраняем варианты ответов
+    # 3. If it's a closed question, save the choices
     if question_in.question_type == QuestionType.CLOSED:
         for choice_text in question_in.choices:
             db_choice = QuestionChoice(
@@ -49,28 +49,28 @@ def create_question(
             db.add(db_choice)
         
         db.commit()
-        db.refresh(new_question) # Чтобы подтянулись созданные choices в ответ
+        db.refresh(new_question) # Refresh to include the created choices in the response
 
     return new_question
 
-# --- ЭНДПОИНТ: ПОЛУЧЕНИЕ ВСЕХ ВОПРОСОВ ---
+# --- ENDPOINT: GET ALL QUESTIONS ---
 @router.get("/", response_model=List[QuestionResponse])
 def get_all_questions(db: Session = Depends(get_db)):
     """
-    Возвращает список всех существующих шаблонов вопросов с их вариантами.
+    Returns a list of all existing question templates with their choices.
     """
     return db.query(Question).all()
 
-# --- ЭНДПОИНТ: УДАЛЕНИЕ ВОПРОСА ---
+# --- ENDPOINT: DELETE QUESTION ---
 @router.delete("/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_question(question_id: int, db: Session = Depends(get_db)):
     """
-    Удаляет вопрос. Благодаря cascade="all, delete-orphan" в моделях, 
-    варианты ответов удалятся автоматически.
+    Deletes a question. Thanks to cascade="all, delete-orphan" in the models, 
+    associated choices will be deleted automatically.
     """
     question = db.query(Question).filter(Question.id == question_id).first()
     if not question:
-        raise HTTPException(status_code=404, detail="Вопрос не найден")
+        raise HTTPException(status_code=404, detail="Question not found")
     
     db.delete(question)
     db.commit()

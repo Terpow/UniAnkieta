@@ -1,5 +1,5 @@
 /**
- * TeacherDashboard.js – Sprint 5
+ * TeacherDashboard.js –
  * Panel wykładowcy / admina:
  *   • Summary Cards (metryki)
  *   • Bar/Pie charts dla pytań zamkniętych (Chart.js via CDN)
@@ -32,13 +32,13 @@ function buildNav(email = '') {
     </nav>`;
 }
 
-// ── Palette for charts ─────────────────────────────────────────────────────
+// Palette for charts 
 const COLORS = [
   '#2563eb', '#16a34a', '#f59e0b', '#dc2626', '#7c3aed',
   '#0891b2', '#d97706', '#15803d', '#be185d', '#1d4ed8',
 ];
 
-// ── Load Chart.js from CDN (once) ─────────────────────────────────────────
+// Load Chart.js from CDN (once) 
 function loadChartJs() {
   return new Promise((resolve) => {
     if (window.Chart) { resolve(); return; }
@@ -49,7 +49,7 @@ function loadChartJs() {
   });
 }
 
-// ── Render one Bar chart for a closed question ─────────────────────────────
+// Render one Bar chart for a closed question
 function renderBarChart(canvasId, data) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
@@ -89,7 +89,7 @@ function renderBarChart(canvasId, data) {
   });
 }
 
-// ── Render one Pie chart ───────────────────────────────────────────────────
+// Render one Pie chart
 function renderPieChart(canvasId, data) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
@@ -120,7 +120,7 @@ function renderPieChart(canvasId, data) {
   });
 }
 
-// ── Summary cards ──────────────────────────────────────────────────────────
+// Summary cards 
 function renderSummaryCards(metrics) {
   return `
     <div class="dashboard-grid" style="margin-bottom:32px;">
@@ -159,7 +159,7 @@ function renderSummaryCards(metrics) {
     </div>`;
 }
 
-// ── Export helpers ─────────────────────────────────────────────────────────
+// Export helpers 
 async function downloadFile(url, filename, btnId) {
   const btn = document.getElementById(btnId);
   if (!btn) return;
@@ -194,7 +194,7 @@ async function downloadFile(url, filename, btnId) {
   }
 }
 
-// ── Open answers panel ─────────────────────────────────────────────────────
+//Open answers panel 
 async function loadOpenAnswers(questionId, page = 1) {
   const container = document.getElementById(`open-${questionId}`);
   if (!container) return;
@@ -234,7 +234,7 @@ async function loadOpenAnswers(questionId, page = 1) {
   }
 }
 
-// ── Main render ────────────────────────────────────────────────────────────
+//  Main render 
 export async function renderTeacherDashboard(email = '') {
   const app = document.querySelector('#app');
   if (!app) return;

@@ -9,18 +9,31 @@ SECRET_KEY = os.getenv("JWT_SECRET")
 ALGORITHM = os.getenv("ALGORITHM")
 
 def get_current_user(authorization: str = Header(...)):
-    """Проверяет токен в заголовке запроса"""
+    """Validates the JWT token provided in the Authorization header"""
     try:
-        # Убираем слово 'Bearer ' из заголовка
-        token = authorization.split(" ")[1]
-        # Расшифровываем токен
+        # Expected format: "Bearer <token>"
+        parts = authorization.split(" ")
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            raise IndexError
+            
+        token = parts[1]
+        
+        # Decode the token using the secret key and algorithm
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload  # Здесь будут user_id и role
+        
+        # Returns the payload containing user_id and role
+        return payload  
     except (JWTError, IndexError):
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
+        raise HTTPException(
+            status_code=401, 
+            detail="Could not validate credentials or invalid token format"
+        )
 
 def check_admin_role(user=Depends(get_current_user)):
-    """Проверяет, является ли пользователь админом"""
+    """Dependency to verify if the current user has administrative privileges"""
     if user.get("role") != "Admin":
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+        raise HTTPException(
+            status_code=403, 
+            detail="Access denied: Insufficient permissions"
+        )
     return user
