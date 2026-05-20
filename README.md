@@ -1,208 +1,428 @@
-# UniAnkieta
+# 🏛️ UniAnkieta
+> Akademicki system ankiet studenckich — szybki, anonimowy, zgodny z RODO.
+
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.135-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql)](https://www.postgresql.org/)
+[![Vite](https://img.shields.io/badge/Vite-JS-646CFF?logo=vite)](https://vitejs.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docs.docker.com/compose/)
+[![Wersja](https://img.shields.io/badge/wersja-v1.6.0-blue)]()
+
+---
 
 ## Opis projektu
-UniAnkieta to nowoczesna aplikacja webowa przeznaczona do przeprowadzania w pełni anonimowych ankiet studenckich na uczelniach wyższych. System pozwala na zbieranie opinii od studentów na temat prowadzonych zajęć, przedmiotów oraz kadry dydaktycznej w sposób bezpieczny, szybki i zgodny z wymaganiami prawnymi (w tym RODO). Rozwiązanie to automatyzuje proces zbierania danych, eliminuje ankiety papierowe oraz dostarcza gotowe zestawienia statystyczne dla wykładowców i administracji.
 
-## Sprint plan
-Projekt był realizowany w oparciu o metodykę zwinno-szablonową (Agile/Scrum). Główne etapy rozwoju systemu obejmowały:
-* **Sprinty 1-3:** Opracowanie architektury bazy danych, podstawowych modeli SQLAlchemy, mechanizmów autoryzacji JWT oraz struktury interfejsu SPA.
-* **Sprint 4:** Implementacja zarządzania edycjami ankiet (Survey Tours) oraz kreatora szablonów pytań otwartych i zamkniętych (UC-01, UC-30).
-* **Sprint 5 :** Dodanie zaawansowanego panelu analitycznego i eksportu danych, implementacja trybu deweloperskiego (Demo-mode login), pełna obsługa panelu zarządzania użytkownikami (UC-35) oraz końcowe testy integracyjne.
-* **Sprint 6:** Stabilizacja systemu i finalne poprawki.
+**UniAnkieta** to webowa platforma ankiet przeznaczona dla środowisk akademickich. Rozwiązuje problem ręcznego zbierania i analizy opinii studenckich — zastępuje papierowe formularze i rozproszone arkusze kalkulacyjne jednym, zintegrowanym systemem.
+
+**Dla kogo:**
+-  **Studenci** — wypełniają ankiety przypisane do ich grup, korzystając z jednorazowych, anonimowych tokenów
+-  **Wykładowcy** — tworzą pytania, śledzą wskaźniki ukończenia tur w czasie rzeczywistym
+-  **Administratorzy** — zarządzają użytkownikami, turami ankiet, importują dane z systemu USOS, eksportują raporty
+
+**Kluczowe zalety:**
+- Pełna anonimizacja odpowiedzi dzięki systemowi jednorazowych tokenów UUID
+- Zgodność z RODO — odpowiedzi nie są powiązane z tożsamością studenta
+- Import studentów z pliku CSV (format USOS)
+- Eksport raportów w formacie PDF i CSV (`reportlab`)
+- Logowanie przez SSO (integracja z USOS)
+
+---
+
+## Sprint Plan
+
+| Sprint | Cel (Kamień milowy)                              | Termin     |
+|--------|--------------------------------------------------|------------|
+| 1      | Konfiguracja środowiska, Docker, baza danych     | 24.03.2026 |
+| 2      | Autentykacja JWT, SSO, system ról (UC-01)        | 07.04.2026 |
+| 3      | Zarządzanie turami ankiet i pytaniami (UC-30)    | 21.04.2026 |
+| 4      | Anonimowe wypełnianie ankiet, tokeny (UC-05)     | 05.05.2026 |
+| 5      | Analityka, eksport PDF/CSV, dashboard admina     | 19.05.2026 |
+| 6      | Panel nauczyciela, powiadomienia, import USOS    | 02.06.2026 |
+
+---
 
 ## Autorzy
-* **Zespół Projektowy UniAnkieta** (w ramach kursu Projekt Zespołowy Systemów Informatycznych 2026).
+
+| Imię i nazwisko       | Rola                        |
+|-----------------------|-----------------------------|
+| Stanislav Kosheliev      | Backend (FastAPI, SQLAlchemy) |
+| Aliaksei Kalcheuski      | Frontend (Vite, JavaScript)   |
+| Aliaksei Kalcheuski,Stanislav Kosheliev    | DevOps / Baza danych (Docker, PostgreSQL) |
+
+---
 
 ## Technologie
-### Backend:
-* **Python 3.11** (obraz `python:3.11-slim`)
-* **FastAPI** – framework do budowy wydajnego REST API 
-* **SQLAlchemy** – ORM do mapowania obiektowo-relacyjnego 
-* **Pydantic** – walidacja danych i definicja schematów API 
-* **PostgreSQL** – relacyjna baza danych 
-* **Passlib / Bcrypt** – bezpieczne haszowanie haseł użytkowników 
-* **JWT (JSON Web Tokens)** – autoryzacja stanowa sesji 
 
-### Frontend:
-***JavaScript (ES6+)** – czysta logika aplikacji SPA 
-***Vite** – nowoczesne narzędzie do budowania i uruchamiania frontendu 
-* **Node.js 20** (obraz `node:20-slim`)
+**Backend:**
+- Python 3.11, FastAPI 0.135, Uvicorn 0.42
+- SQLAlchemy 2.0 (ORM), Pydantic 2.12
+- PostgreSQL 15, psycopg2-binary
+- JWT (`python-jose`), bcrypt (`passlib`)
+- `reportlab` 4.2 — generowanie raportów PDF
+- `python-multipart` — obsługa plików CSV (import USOS)
 
-### DevOps i Konteneryzacja:
-* **Docker & Docker Compose** – konteneryzacja całego środowiska uruchomieniowego 
+**Frontend:**
+- Vite + Vanilla JavaScript (ES Modules)
+- Chart.js — wizualizacje i wykresy
+- Architektura SPA z routingiem po stronie klienta
 
-## Funkcjonalności
-* **Pełna anonimizacja odpowiedzi (UC-05):** System generuje unikalne, kryptograficzne tokeny ankiet (`SurveyToken`), które uniemożliwiają powiązanie konkretnego studenta z jego odpowiedziami, gwarantując poufność i zgodność z RODO.
-* **Integracja z systemem USOS:** Pobieranie struktury grup dydaktycznych, przedmiotów oraz danych akademickich.
-* **System uprawnień i ról (UC-35):** Trzy poziomy dostępów: Admin, Teacher, Student.
-  * **Admin:** Zarządzanie kontami użytkowników, zmiana ról, tworzenie pytań oraz uruchamianie tur ankiet.
-  * **Teacher:** Dostęp do statystyk, raportów oraz analizy wyników ankiet z własnych przedmiotów.
-  * **Student:** Przegląd i bezpieczne, anonimowe wypełnianie aktywnych ankiet.
-* **Zarządzanie turami (UC-01):** Elastyczne planowanie ram czasowych (data rozpoczęcia i zakończenia) dla poszczególnych procesów ankietyzacji.
-* **Szablony pytań (UC-30):** Obsługa pytań otwartych (tekstowych) oraz zamkniętych (wielokrotnego wyboru z dynamicznymi opcjami odpowiedzi).
-* **Tryb deweloperski (Demo Mode):** Uproszczone logowanie jednym kliknięciem na testowe profile w celu prezentacji działania systemu.
+**Infrastruktura:**
+- Docker 24+, Docker Compose v3.8
+- Trzy serwisy: `uniankieta_db`, `uniankieta_api`, `uniankieta_web`
+
+---
+
+## Kluczowe funkcjonalności
+
+###  Administrator
+-Zarządzanie użytkownikami — przeglądanie, zmiana ról (Admin / Teacher / Student)
+- Tworzenie, edycja i usuwanie tur ankiet (`SurveyTour`)
+- Przypisywanie i usuwanie studentów z tur
+- Import studentów z pliku `.csv` (format USOS, kodowanie UTF-8-BOM)
+- Podgląd statusu tokenów (przypisany / wypełniony)
+- Eksport raportów analitycznych do PDF i CSV
+- Dashboard z globalnym wskaźnikiem wypełnienia ankiet
+
+###  Nauczyciel
+- Tworzenie pytań otwartych (`open`) i zamkniętych (`closed`) z wariantami odpowiedzi
+- Aktywowanie i deaktywowanie pytań
+- Śledzenie wskaźnika ukończenia tur w czasie rzeczywistym (`TourCompletionTracker`)
+- Powiadomienia o turach kończących się w ciągu 48 godzin
+- Widok postępu per tura: przypisani / wypełnili
+
+###  Student
+- Logowanie przez SSO (USOS) lub email + hasło
+- Przeglądanie przypisanych ankiet ze statusem (`Do wypełnienia`, `Wypełniona`, `Zakończona`)
+- Anonimowe wypełnianie ankiet za pomocą jednorazowego tokenu UUID
+- Powiadomienia o nowych i nadchodzących ankietach
+- Blokada ponownego wypełnienia (token `is_used = true`)
+
+###  System i bezpieczeństwo
+- Autentykacja JWT (Bearer Token) na wszystkich chronionych endpointach
+- Logowanie SSO z callbackiem i automatycznym tworzeniem konta
+- Anonimizacja — odpowiedzi nie zawierają danych identyfikacyjnych studenta
+- Automatyczna migracja tabel przy starcie (`create_all` z retry loop)
+- Healthcheck bazy danych w Docker Compose
+
+---
 
 ## Architektura projektu
-Aplikacja została zaprojektowana w architekturze klient-serwer (Client-Server Architecture) z pełnym odseparowaniem warstwy wizualnej od logiki biznesowej:
-1. **Frontend SPA:** Warstwa prezentacji komunikująca się z serwerem asynchronicznie za pomocą `Fetch API` z przesyłaniem tokenu JWT w nagłówkach HTTP (`Authorization: Bearer`).
-2. **Backend API:** RESTful API oparte na FastAPI z modularnym podziałem na routery (`auth`, `admin`, `tours`, `questions`, `analytics`, `usos`).
-3. **Baza danych:** Warstwa trwałości danych PostgreSQL odzwierciedlona za pomocą relacyjnych modeli SQLAlchemy.
 
-## Instalacja
-Do uruchomienia projektu wymagane jest zainstalowane środowisko **Docker** oraz **Docker Compose**.
-
-1. Sklonuj repozytorium projektu:
-   ```bash
-   git clone <link-do-twojego-repozytorium>
-   cd uniankieta
+Aplikacja zbudowana jest w architekturze **klient–serwer** z podziałem na trzy niezależne kontenery:
 
 ```
+┌─────────────────────┐        REST API (JSON)       ┌──────────────────────┐
+│   uniankieta_web    │ ◄──────────────────────────► │  uniankieta_api      │
+│  Vite + JS SPA      │      http://localhost:8000    │  FastAPI + Uvicorn   │
+│  port: 5173         │                               │  port: 8000          │
+└─────────────────────┘                               └──────────┬───────────┘
+                                                                 │ SQLAlchemy ORM
+                                                                 ▼
+                                                      ┌──────────────────────┐
+                                                      │  uniankieta_db       │
+                                                      │  PostgreSQL 15       │
+                                                      │  port: 5432          │
+                                                      └──────────────────────┘
+```
 
-2. Upewnij się, że pliki konfiguracyjne środowiska są poprawnie ustawione (np. adres URL API we frontendzie wskazuje na port backendu).
+**Przepływ autentykacji:**
+1. Użytkownik loguje się przez SSO lub email/hasło (`POST /api/auth/login-password`)
+2. Backend zwraca JWT Bearer Token
+3. Frontend dołącza token do każdego zapytania: `Authorization: Bearer <token>`
+4. Backend weryfikuje token i sprawdza rolę użytkownika przed wykonaniem akcji
 
+**Anonimizacja odpowiedzi:**
+1. Admin przypisuje studenta do tury → generowany jest UUID token (`SurveyToken`)
+2. Student używa tokenu do wypełnienia ankiety
+3. Po wypełnieniu token jest oznaczany jako `is_used = true`
+4. Odpowiedzi (`Answer`) nie zawierają pola `user_id` — pełna anonimowość
 
+---
+
+## Instalacja
+
+### Wymagania systemowe
+- Docker 24+ oraz Docker Compose v2+
+- **lub** Python 3.11+ i Node.js 18+ (uruchomienie lokalne)
+
+### 1. Sklonuj repozytorium
+
+```bash
+git clone https://github.com/Terpow/UniAnkieta.git
+cd uniankieta
+```
+
+### 2. Konfiguracja zmiennych środowiskowych
+
+Utwórz plik `.env` w katalogu `backend/`:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Zawartość `backend/.env`:
+
+```env
+DATABASE_URL=postgresql://user:password@db:5432/uniankieta
+SECRET_KEY=zmień_na_losowy_klucz_min_32_znaki
+ALGORITHM=HS256
+FRONTEND_URL=http://localhost:5173
+```
+
+> **Uwaga:** Dla uruchomienia przez Docker Compose zmienne środowiskowe są już zdefiniowane w `docker-compose.yml` i plik `.env` nie jest wymagany.
+
+---
 
 ## Uruchomienie aplikacji
 
-Wszystkie usługi (Baza danych, API, Aplikacja webowa) są w pełni zorkiestrowane za pomocą Docker Compose.
+### ▶ Opcja A: Docker Compose (zalecana)
 
-W celu zbudowania obrazów i uruchomienia kontenerów w katalogu głównym projektu wykonaj polecenie:
+Jedyne wymaganie: zainstalowany Docker Desktop lub Docker Engine z Compose.
 
 ```bash
-docker-compose up --build
+# Zbuduj obrazy i uruchom wszystkie serwisy w tle
+docker compose up --build -d
 
+# Sprawdź logi
+docker compose logs -f
+
+# Zatrzymaj serwisy
+docker compose down
 ```
 
-Po pomyślnym uruchomieniu aplikacja będzie dostępna pod następującymi adresami:
+Po uruchomieniu aplikacja dostępna pod adresami:
 
-* 
-**Frontend (Aplikacja kliencka):** [http://localhost:5173](https://www.google.com/search?q=http://localhost:5173) 
+| Serwis       | URL                         | Kontener          |
+|--------------|-----------------------------|-------------------|
+| Frontend     | http://localhost:5173       | `uniankieta_web`  |
+| Backend API  | http://localhost:8000       | `uniankieta_api`  |
+| API Docs     | http://localhost:8000/docs  | `uniankieta_api`  |
+| PostgreSQL   | localhost:5432              | `uniankieta_db`   |
 
+---
 
-* 
-**Backend API (Serwer):** [http://localhost:8000](https://www.google.com/search?q=http://localhost:8000) 
+### ▶ Opcja B: Uruchomienie lokalne (bez Dockera)
 
+#### Backend
 
-* **Dokumentacja API (Swagger UI):** [http://localhost:8000/docs](https://www.google.com/search?q=http://localhost:8000/docs)
+```bash
+cd backend
 
-Uwaga: Backend posiada wbudowany mechanizm automatycznego ponawiania prób połączenia z bazą danych (retry), co zapobiega błędom startowym przed pełnym uruchomieniem bazy danych PostgreSQL.
+# Utwórz i aktywuj środowisko wirtualne
+python -m venv venv
+source venv/bin/activate        # Linux/macOS
+# venv\Scripts\activate         # Windows
+
+# Zainstaluj zależności
+pip install -r requirements.txt
+
+# Skonfiguruj zmienne środowiskowe (edytuj .env)
+cp .env.example .env
+
+# Uruchom serwer deweloperski
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+#### Frontend
+
+```bash
+cd frontend
+
+# Zainstaluj zależności
+npm install
+
+# Skonfiguruj URL backendu
+echo "VITE_API_URL=http://localhost:8000" > .env
+
+# Uruchom serwer deweloperski
+npm run dev
+```
+
+---
 
 ## Instrukcja użytkownika
 
-1. Otwórz przeglądarkę internetową i przejdź pod adres `http://localhost:5173`.
+### Jako Administrator
 
+1. Otwórz przeglądarkę i przejdź pod adres `http://localhost:5173`
+2. Zaloguj się kontem z rolą Admin  
+   *(tryb demo: `admin@admin.pl` z dowolnym hasłem)*
+3. W panelu admina możesz:
+   - **Zarządzanie turami** → utwórz turę, ustaw daty, aktywuj
+   - **Przypisz studentów** → dodaj studentów do tury (lub zaimportuj CSV z USOS)
+   - **Zarządzanie pytaniami** → dodaj pytania otwarte/zamknięte
+   - **Analityka** → przeglądaj wskaźniki, eksportuj raport PDF/CSV
+   - **Użytkownicy** → przeglądaj konta, zmieniaj role
 
-2. **Logowanie i rejestracja:**
-* Możesz zarejestrować nowe konto użytkownika w zakładce "Rejestracja".
+### Jako Nauczyciel
 
+1. Zaloguj się kontem z rolą Teacher  
+   *(tryb demo: `teacher@teacher.pl` z dowolnym hasłem)*
+2. W panelu nauczyciela możesz:
+   - Tworzyć i zarządzać pytaniami do ankiet
+   - Śledzić wskaźnik ukończenia tur (wykres progress bar per tura)
+   - Przeglądać powiadomienia o kończących się turach
 
-* Możesz zalogować się za pomocą adresu e-mail i hasła.
+###  Jako Student
 
+1. Zaloguj się przez SSO lub kontem z rolą Student  
+   *(tryb demo: `student@student.pl` z dowolnym hasłem)*
+2. Na liście ankiet zobaczysz przypisane tury ze statusem:
+   - **Do wypełnienia** — aktywna, w terminie, token nieużyty
+   - **Wypełniona** — token oznaczony jako użyty
+   - **Zakończona** — tura po dacie końcowej
+3. Kliknij turę i wypełnij ankietę — odpowiedzi są w pełni anonimowe
 
-* Dla celów szybkiej prezentacji skorzystaj z sekcji **tryb deweloperski** na dole ekranu logowania i kliknij przycisk **Student**, **Teacher** lub **Admin**, aby zalogować się bez wpisywania haseł.
-
-
-
-
-3. 
-**Panel Admina:** Umożliwia wgląd w listę użytkowników i zmianę ich ról, dodawanie nowych pytań do bazy oraz tworzenie tur ankiet.
-
-
-4. 
-**Wypełnianie ankiet:** Zalogowany Student widzi przypisane do niego aktywne tury ankiet, które może wypełnić w sposób całkowicie bezpieczny i anonimowy.
-
-
+---
 
 ## Struktura repozytorium
 
-```text
-├── backend/               # Część serwerowa aplikacji (FastAPI) 
-│   ├── app/
-│   │   ├── api/           # Routery obsługujące poszczególne moduły (auth, admin, tours, questions, analytics) 
-│   │   ├── core/          # Logika bezpieczeństwa, generowanie tokenów, usługi autoryzacji 
-│   │   ├── models.py      # Definicje tabel i relacji bazy danych SQLAlchemy 
-│   │   ├── schemas.py     # Schematy walidacyjne Pydantic 
-│   │   ├── database.py    # Konfiguracja silnika i połączenia z DB 
-│   │   └── main.py        # Główny punkt wejścia aplikacji FastAPI 
-│   ├── Dockerfile         # Plik konfiguracyjny kontenera backendu
-│   └── requirements.txt   # Zależności i biblioteki języka Python
-├── frontend/              # Interfejs użytkownika (Vite) 
-│   ├── assets/            # Statyczne pliki graficzne (np. logo)
-│   ├── adminUsers.js      # Panel administracyjny zarządzania rolami użytkowników 
-│   ├── login.js           # Obsługa formularzy logowania, rejestracji oraz integracji SSO 
-│   ├── api.js             # Wspólny moduł zapytań Fetch API z obsługą nagłówków JWT 
-│   ├── main.js            # Główny plik inicjalizacyjny frontendu 
-│   ├── index.html         # Główny plik szablonu HTML frontendu
-│   └── Dockerfile         # Plik konfiguracyjny kontenera frontendu
-└── docker-compose.yml     # Plik konfiguracyjny orkiestracji usług Docker 
-
 ```
+uniankieta/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── admin.py          # Endpointy administracyjne
+│   │   │   ├── analytics.py      # Analityka i eksport (Sprint 5)
+│   │   │   ├── auth.py           # Autentykacja JWT i SSO
+│   │   │   ├── questions.py      # Szablony pytań (UC-30)
+│   │   │   ├── responses.py      # Wypełnianie ankiet (UC-05)
+│   │   │   ├── teacher.py        # Panel nauczyciela (Sprint 6)
+│   │   │   ├── tours.py          # Zarządzanie turami (UC-01)
+│   │   │   └── usos.py           # Import CSV z USOS
+│   │   ├── core/
+│   │   │   ├── auth_service.py   # Logika SSO i auto-create user
+│   │   │   ├── deps.py           # Zależności JWT (get_current_user)
+│   │   │   └── security.py       # create_access_token
+│   │   ├── __init__.py
+│   │   ├── database.py           # Konfiguracja SQLAlchemy
+│   │   ├── main.py               # Punkt wejścia FastAPI, rejestracja routerów
+│   │   ├── models.py             # Modele ORM (User, SurveyTour, Answer, ...)
+│   │   └── schemas.py            # Schematy Pydantic
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── api.js                # Współdzielony helper fetch z JWT
+│   │   ├── adminUsers.js         # Zarządzanie użytkownikami (UC-35)
+│   │   ├── login.js              # Logowanie i obsługa tokenów
+│   │   ├── TourCompletionTracker.js  # Wykres ukończenia tur (Sprint 6)
+│   │   └── ...
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+├── docker-compose.yml
+└── README.md
+```
+
+---
 
 ## API
 
-Pełna interaktywna dokumentacja wszystkich punktów końcowych (endpoints) znajduje się pod adresem `http://localhost:8000/docs`.
+Pełna interaktywna dokumentacja Swagger UI dostępna pod: `http://localhost:8000/docs`
 
-### Wybrane Endpointy API:
+### Autentykacja
 
-* **Autentykacja (`/api/auth`):**
-* 
-`POST /api/auth/register` – Rejestracja nowego konta.
+| Metoda | Endpoint                          | Opis                                      | Rola       |
+|--------|-----------------------------------|-------------------------------------------|------------|
+| `POST` | `/api/auth/login-password`        | Logowanie email + hasło, zwraca JWT       | Publiczny  |
+| `POST` | `/api/auth/register`              | Rejestracja konta Student / Teacher       | Publiczny  |
+| `GET`  | `/api/auth/sso-login`             | Przekierowanie do logowania SSO (USOS)    | Publiczny  |
+| `GET`  | `/api/auth/sso-callback`          | Callback SSO, zwraca JWT w query param    | Publiczny  |
+| `GET`  | `/api/auth/dev-login-admin`       | Szybkie logowanie Admin (tryb demo)       | Dev        |
+| `GET`  | `/api/auth/dev-login-student`     | Szybkie logowanie Student (tryb demo)     | Dev        |
+| `GET`  | `/api/auth/dev-login-teacher`     | Szybkie logowanie Teacher (tryb demo)     | Dev        |
 
+### Tury ankiet
 
-* 
-`POST /api/auth/login-password` – Logowanie e-mail/hasło (w trybie Sprint 5 jako demo-mode).
+| Metoda   | Endpoint                                    | Opis                                      | Rola      |
+|----------|---------------------------------------------|-------------------------------------------|-----------|
+| `POST`   | `/api/admin/tours`                          | Utwórz nową turę                          | Admin     |
+| `GET`    | `/api/admin/tours`                          | Lista wszystkich tur                      | Admin     |
+| `PATCH`  | `/api/admin/tours/{tour_id}`                | Aktualizuj turę (daty, status)            | Admin     |
+| `DELETE` | `/api/admin/tours/{tour_id}`                | Usuń turę i przypisane tokeny             | Admin     |
+| `POST`   | `/api/admin/tours/{tour_id}/students/{id}`  | Przypisz studenta do tury (token UUID)    | Admin     |
+| `DELETE` | `/api/admin/tours/{tour_id}/students/{id}`  | Usuń studenta z tury                      | Admin     |
+| `GET`    | `/api/admin/tours/{tour_id}/students`       | Lista studentów z statusem tokenów        | Admin     |
+| `GET`    | `/api/tours/my-surveys`                     | Ankiety przypisane do zalogowanego studenta | Student |
+| `GET`    | `/api/tours/my-token/{tour_id}`             | Pobierz osobisty token do tury            | Student   |
 
+### Pytania
 
-* `GET /api/auth/dev-login-admin` | `-teacher` | `-student` – Szybkie logowanie deweloperskie.
+| Metoda   | Endpoint                              | Opis                                   | Rola            |
+|----------|---------------------------------------|----------------------------------------|-----------------|
+| `POST`   | `/api/admin/questions`                | Utwórz pytanie (open / closed)         | Admin           |
+| `GET`    | `/api/admin/questions`                | Lista wszystkich pytań                 | Admin           |
+| `PATCH`  | `/api/admin/questions/{id}`           | Aktywuj / deaktywuj pytanie            | Admin           |
+| `DELETE` | `/api/admin/questions/{id}`           | Usuń pytanie (cascade choices)         | Admin           |
+| `POST`   | `/api/teacher/questions`              | Utwórz pytanie (panel nauczyciela)     | Teacher / Admin |
+| `GET`    | `/api/teacher/questions`              | Lista pytań (panel nauczyciela)        | Teacher / Admin |
+| `PATCH`  | `/api/teacher/questions/{id}`         | Toggle aktywności pytania              | Teacher / Admin |
+| `DELETE` | `/api/teacher/questions/{id}`         | Usuń pytanie                           | Teacher / Admin |
 
+### Analityka i eksport
 
+| Metoda | Endpoint                               | Opis                                         | Rola  |
+|--------|----------------------------------------|----------------------------------------------|-------|
+| `GET`  | `/api/admin/analytics/summary`         | Globalne statystyki (ankiety, wskaźnik %)    | Admin |
+| `GET`  | `/api/admin/analytics/export/pdf`      | Eksport raportu do PDF (`reportlab`)          | Admin |
+| `GET`  | `/api/admin/analytics/export/csv`      | Eksport danych do CSV                         | Admin |
 
+### Import i powiadomienia
 
-* **Administracja (`/api/admin`):**
-* 
-`GET /api/admin/users` – Pobranie listy wszystkich zarejestrowanych użytkowników.
+| Metoda | Endpoint                          | Opis                                        | Rola    |
+|--------|-----------------------------------|---------------------------------------------|---------|
+| `POST` | `/api/usos/import-students`       | Import studentów z pliku CSV (USOS)         | Admin   |
+| `GET`  | `/api/notifications`              | Spersonalizowane powiadomienia in-app        | Każdy   |
+| `GET`  | `/healthcheck`                    | Status serwera API                           | Publiczny |
 
-
-* 
-`PATCH /api/admin/users/{userId}/role` – Dynamiczna zmiana roli użytkownika.
-
-
-
-
-* **Zarządzanie Turami i Pytaniami:**
-* 
-`POST /api/admin/tours` – Tworzenie nowej edycji ankietyzacji.
-
-
-* 
-`POST /api/admin/questions` – Dodawanie pytań otwartych/zamkniętych do szablonu.
-
-
-* 
-`GET /api/admin/analytics` – Pobieranie zagregowanych wyników i statystyk (Sprint 5).
-
-
-
-
+---
 
 ## Zrzuty ekranu
 
-*Sekcja przeznaczona na dokumentację graficzną interfejsu systemu:*
+| Ekran                  | Plik                                    |
+|------------------------|-----------------------------------------|
+| Ekran logowania        | `screenshots/login.png`                 |
+| Dashboard admina       | `screenshots/admin_dashboard.png`       |
+| Zarządzanie turami     | `screenshots/admin_tours.png`           |
+| Zarządzanie pytaniami  | `screenshots/admin_questions.png`       |
+| Lista użytkowników     | `screenshots/admin_users.png`           |
+| Panel nauczyciela      | `screenshots/teacher_panel.png`         |
+| Tracker ukończenia tur | `screenshots/completion_tracker.png`    |
+| Widok studenta         | `screenshots/student_surveys.png`       |
+| Formularz ankiety      | `screenshots/survey_form.png`           |
 
-* 
-`![Ekran Logowania](docs/login_screen.png)` 
+```
+![Ekran logowania](screenshots/login.png)
+![Dashboard admina](screenshots/admin_dashboard.png)
+![Panel nauczyciela](screenshots/teacher_panel.png)
+![Widok studenta](screenshots/student_surveys.png)
+```
 
-
-* `![Panel Administratora](docs/admin_panel.png)`
-* `![Statystyki i Analiza](docs/analytics_dashboard.png)`
+---
 
 ## Status projektu
 
-Projekt został pomyślnie ukończony w ramach kursu szkolnego *Projekt Zespołowy Systemów Informatycznych 2026*. Wszystkie kluczowe wymagania funkcjonalne, włączając w to zaawansowaną analitykę i integrację modułów ze Sprintu 5, zostały wdrożone i przetestowane.
+**Wersja:** `v1.6.0` — aktywny rozwój
+
+| Moduł                          | Status        |
+|--------------------------------|---------------|
+| Autentykacja JWT + SSO         |  Gotowe     |
+| Zarządzanie turami             |  Gotowe     |
+| System pytań i odpowiedzi      |  Gotowe     |
+| Anonimowe tokeny (UC-05)       |  Gotowe     |
+| Analityka + eksport PDF/CSV    |  Gotowe     |
+| Panel nauczyciela              |  Gotowe     |
+| Import USOS (CSV)              |  Gotowe     |
+| Powiadomienia in-app           |  Gotowe     |
+| Testy jednostkowe              |  W trakcie  |
+
+Projekt realizowany w ramach kursu **Projekt Zespołowy Systemów Informatycznych 2026**.
+
+---
 
 ## Licencja
 
-Projekt o charakterze edukacyjnym. Wszelkie prawa zastrzeżone © 2026 Zespół UniAnkieta.
+Projekt edukacyjny — przeznaczony wyłącznie do celów akademickich.
 
-
-
+© 2026 Zespół UniAnkieta
