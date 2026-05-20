@@ -1,4 +1,4 @@
-# UA-TC-003 – Logowanie istniejącego użytkownika
+# UA-TC-003 – Logowanie istniejącego użytkownika 
 
 ## Informacje ogólne
 
@@ -45,8 +45,8 @@
 | Pole | Wartość |
 |------|---------|
 | **Oczekiwany rezultat** | HTTP 200 · Token w localStorage · Panel studenta widoczny |
-| **Rzeczywisty rezultat** | *(wypełnić podczas testu)* |
-| **Wynik testu** | ☐ PASS · ☐ FAIL |
+| **Rzeczywisty rezultat** | Logowanie przebiegło prawidłowo. DevTools → Network pokazał żądanie POST /api/auth/login-password z odpowiedzią HTTP 200 OK. W odpowiedzi JSON znajdował się poprawny access_token oraz user_info.role: "Student". W localStorage pojawił się klucz uniankieta_jwt z tokenem JWT. Po przekierowaniu widoczny był panel studenta z poprawnym adresem email w nagłówku.|
+| **Wynik testu** | ✔ PASS|
 
 ---
 
@@ -67,8 +67,8 @@
 | Pole | Wartość |
 |------|---------|
 | **Oczekiwany rezultat** | HTTP 401 · Komunikat błędu · Brak tokena w localStorage |
-| **Rzeczywisty rezultat** | *(wypełnić podczas testu)* |
-| **Wynik testu** | ☐ PASS · ☐ FAIL |
+| **Rzeczywisty rezultat** | System poprawnie odrzucił logowanie. DevTools → Network pokazał odpowiedź HTTP 401 Unauthorized z komunikatem detail: "Nieprawidłowy email lub hasło.". Na stronie pojawił się czerwony komunikat błędu. W localStorage nie zapisano żadnego tokena. |
+| **Wynik testu** | ✔ PASS|
 
 ---
 
@@ -79,3 +79,26 @@
 | 1 | Otwórz `http://localhost:5173` | Strona logowania załadowana |
 | 2 | Wpisz email: `nieistniejacy@student.pl` | Pole wypełnione |
 | 3 | Wpisz hasło: `cokolwiek123` | Pole wyp
+| 4 | Kliknij „Zaloguj się"` | Wysyłane żądanie
+| 5 | DevTools → Network → login-password | HTTP 401 Unauthorized
+| 6 | Sprawdź stronę | Komunikat błędu widoczny
+| 7 | Sprawdź localStorage |	Brak tokena
+
+### Rezultat C
+
+| Pole | Wartość |
+|------|---------|
+| **Oczekiwany rezultat** | HTTP 401 · Komunikat błędu · Brak tokena |
+| **Rzeczywisty rezultat** | System poprawnie odrzucił próbę logowania. DevTools → Network pokazał odpowiedź HTTP 401 Unauthorized. Komunikat błędu został wyświetlony pod formularzem. LocalStorage pozostał pusty — token nie został wygenerowany.|
+| **Wynik testu** | ✔ PASS|
+
+# Uwagi
+- Endpoint działa zgodnie z logiką bezpieczeństwa JWT
+- System poprawnie rozróżnia błędne hasło i nieistniejący email
+- Brak podatności typu „user enumeration” — komunikat błędu jest taki sam
+- Token zapisywany jest tylko przy poprawnym logowaniu
+
+# Powiązane
+- Issue: #48
+- Endpoint: POST /api/auth/login-password
+- Frontend: src/login.js
