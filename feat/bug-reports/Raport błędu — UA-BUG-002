@@ -1,0 +1,171 @@
+# Raport błędu — UA-BUG-002
+
+## Status ogólny
+
+> ⚠️ Błąd wykryty podczas analizy kodu źródłowego — poza głównym scenariuszem testowym. Endpoint przyjmowania odpowiedzi ankiety akceptuje surowy `dict` bez walidacji schematu, co umożliwia zapis odpowiedzi do nieistniejących pytań oraz uszkodzenie danych analitycznych.
+
+---
+
+## BUG-002 — Endpoint `POST /api/responses/submit` akceptuje niesprawdzony `dict` — brak walidacji `question_id` i wartości odpowiedzi
+
+| Pole | Wartość |
+|---|---|
+| **ID błędu** | UA-BUG-003 |
+| **Tytuł** | `POST /api/responses/submit` przyjmuje `submission: dict` bez Pydantic schema — możliwy zapis odpowiedzi do nieistniejących pytań i pomijanie wymaganych pól |
+| **Severity** | **High** — uszkodzenie integralności danych analitycznych; odpowiedzi powiązane z nieistniejącymi `question_id` powodują ciche błędy w raportach i eksporcie CSV/PDF |
+| **Środowisko** | Backend: `http://localhost:8000` / FastAPI 0.135.1 / SQLAlchemy 2.0.48 / Python 3.11 / Docker: `uniankieta_api` |
+
+---
+
+## Opis błędu
+
+W pliku `backend/app/api/responses.py` sygnatura endpointu to:
+
+```python
+@router.post("/submit")
+def submit_survey(submission: dict, db: Session = Depends(get_db)):
+```
+
+Użycie `dict` zamiast zdefiniowanego modelu Pydantic powoduje kilka problemów jednocześnie:
+
+**Problem 1 — Brak walidacji `question_id`:** Iteracja `for ans in submission.get("answers", [])` nie sprawdza, czy `question_id` istnieje w tabeli `questions`. Jeśli klient prześle `question_id=9999` (nieistniejące pytanie), SQLAlchemy wykona `INSERT` do tabeli `answers` z nieistniejącym kluczem obcym. Baza PostgreSQL wymusi integralność (FK constraint), lecz wyjątek nie jest obsługiwany — użytkownik otrzyma `HTTP 500 Internal Server Error` bez żadnego komunikatu, a token zostanie oznaczony jako `is_used=True` mimo niepowodzenia (patrz: Problem 2).
+
+**Problem 2 — Race condition przy oznaczaniu tokenu:** Zapis odpowiedzi i oznaczenie `db_token.is_used = True` są wykonywane w ramach jednego `db.commit()`. Jeśli którykolwiek `INSERT` do `answers` rzuci wyjątek (np. FK violation), `commit` nie dojdzie do skutku — co jest prawidłowe. Jednak brakuje obsługi tego wyjątku (`try/except`), więc serwer zwraca HTTP 500, a student nie wie, czy ankieta została zapisana. Może ponownie spróbować przesłać formularz, lecz token pozostaje `is_used=False`, co tworzy ryzyko wielokrotnego zapisu przy ponownej próbie.
+
+**Problem 3 — Brak walidacji pól `value`:** Pole `value` odpowiedzi jest typowane jako `String` w modelu `Answer`, ale nie ma żadnego limitu długości. Przesłanie wartości o długości 100 000 znaków zostanie zapisane bez błędu.
+
+---
+
+## Kroki reprodukcji
+
+### Scenariusz A — nieistniejące `question_id`
+
+1. Uruchom środowisko: `docker-compose up --build`
+2. Zaloguj się jako Student (przycisk `Student` na stronie logowania), pobierz token ankiety dla aktywnej tury
+3. Wywołaj żądanie:
+   ```
+   POST http://localhost:8000/api/responses/submit
+   Content-Type: application/json
+
+   {
+     "token": "<ważny_token_studenta>",
+     "answers": [
+       {"question_id": 99999, "value": "odpowiedz testowa"}
+     ]
+   }
+   ```
+4. Sprawdź odpowiedź — oczekiwane: `HTTP 400 Bad Request` z komunikatem `"question_id 99999 does not exist"`, otrzymane: `HTTP 500 Internal Server Error`
+
+### Scenariusz B — brakujące pole `value`
+
+1. Wywołaj żądanie z pominięciem klucza `value`:
+   ```json
+   {"token": "<ważny_token>", "answers": [{"question_id": 1}]}
+   ```
+2. Otrzymane: `HTTP 500 Internal Server Error` (`KeyError: 'value'` w logach kontenera), zamiast `HTTP 422 Unprocessable Entity`
+
+---
+
+## Wynik aktualny
+
+- Przesłanie odpowiedzi z nieistniejącym `question_id` zwraca **HTTP 500** (nieobsługiwany wyjątek IntegrityError z PostgreSQL).
+- Brakujące pole `value` zwraca **HTTP 500** (KeyError), zamiast walidacyjnego **HTTP 422**.
+- Brak jasnego komunikatu błędu po stronie frontendu — użytkownik widzi ogólny Toast `"Błąd serwera"`.
+- W logach kontenera `uniankieta_api` widoczny stack trace SQLAlchemy / KeyError.
+
+---
+
+## Wynik oczekiwany
+
+- Przesłanie odpowiedzi z nieistniejącym `question_id` zwraca **HTTP 400 Bad Request** z komunikatem opisującym przyczynę.
+- Brakujące pole zwraca **HTTP 422 Unprocessable Entity** (standardowa walidacja FastAPI/Pydantic).
+- Poprawnie wypełniona ankieta zwraca **HTTP 200 OK** z komunikatem `"Survey submitted successfully and anonymously!"`.
+- Token jest oznaczany jako `is_used=True` **wyłącznie** po pomyślnym zapisaniu wszystkich odpowiedzi.
+
+---
+
+## Propozycja naprawy
+
+**Plik:** `backend/app/api/responses.py`
+
+Zastąpić `dict` dedykowanymi modelami Pydantic i dodać walidację `question_id` oraz obsługę wyjątków:
+
+```python
+# backend/app/api/responses.py
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
+from typing import List
+
+from app.database import get_db
+from app.models import SurveyToken, Answer, Question
+
+router = APIRouter(prefix="/api/responses", tags=["Responses"])
+
+
+# NAPRAWA: Zdefiniuj jawne schematy Pydantic zamiast surowego dict
+class AnswerItem(BaseModel):
+    question_id: int
+    value: str = Field(..., min_length=1, max_length=5000)
+
+
+class SurveySubmission(BaseModel):
+    token: str
+    answers: List[AnswerItem] = Field(..., min_length=1)
+
+
+@router.post("/submit")
+def submit_survey(
+    submission: SurveySubmission,  # NAPRAWA: typed schema zamiast dict
+    db: Session = Depends(get_db)
+):
+    # 1. Weryfikacja tokenu
+    db_token = db.query(SurveyToken).filter(
+        SurveyToken.token == submission.token
+    ).first()
+
+    if not db_token:
+        raise HTTPException(status_code=404, detail="Token not found")
+
+    if db_token.is_used:
+        raise HTTPException(status_code=400, detail="You have already submitted this survey!")
+
+    # NAPRAWA: Walidacja question_id przed zapisem
+    question_ids = {ans.question_id for ans in submission.answers}
+    existing_ids = {
+        q.id for q in db.query(Question).filter(Question.id.in_(question_ids)).all()
+    }
+    missing_ids = question_ids - existing_ids
+    if missing_ids:
+        raise HTTPException(
+            status_code=400,
+            detail=f"question_id(s) not found: {sorted(missing_ids)}"
+        )
+
+    # 2. Zapis odpowiedzi i oznaczenie tokenu w jednej transakcji
+    try:
+        for ans in submission.answers:
+            db.add(Answer(question_id=ans.question_id, value=ans.value))
+
+        db_token.is_used = True
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Błąd zapisu odpowiedzi. Spróbuj ponownie."
+        )
+
+    return {"message": "Survey submitted successfully and anonymously!"}
+```
+
+---
+
+## Dodatkowe obserwacje
+
+| Obszar | Obserwacja | Rekomendacja |
+|---|---|---|
+| Walidacja tokenu ankiety | Endpoint nie sprawdza, czy tura powiązana z tokenem (`db_token.tour_id`) jest aktywna i mieści się w oknie czasowym (`start_date <= now <= end_date`). Student z ważnym, niezużytym tokenem może przesłać odpowiedź po zakończeniu tury. | Dodać weryfikację: pobrać `SurveyTour` po `tour_id`, sprawdzić `is_active` i zakres dat przed przyjęciem odpowiedzi. |
+| Atomowość transakcji | Obecny kod wykonuje pętle `db.add()` poza blokiem `try/except`. Awaria w połowie zapisu skutkuje częściowymi danymi w bazie i nieokreślonym stanem tokenu. | Cały blok zapisu (pętla + `is_used = True`) powinien być objęty `try/except` z `db.rollback()` w gałęzi błędu — co propozycja naprawy powyżej implementuje. |
+| Limit odpowiedzi | Nie ma ograniczenia liczby elementów w tablicy `answers`. Klient może przesłać tysiące wpisów w jednym żądaniu. | Dodać `max_length` w `Field(..., max_length=200)` dla listy `answers` lub walidację na poziomie liczby aktywnych pytań w turze. |
