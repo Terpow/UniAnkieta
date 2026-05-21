@@ -1,4 +1,4 @@
-# 🏛️ UniAnkieta
+#UniAnkieta
 > Akademicki system ankiet studenckich — szybki, anonimowy, zgodny z RODO.
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.135-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
@@ -247,29 +247,29 @@ npm run dev
 2. Zaloguj się kontem z rolą Admin  
    *(tryb demo: `admin@admin.pl` z dowolnym hasłem)*
 3. W panelu admina możesz:
-   - **Zarządzanie turami** → utwórz turę, ustaw daty, aktywuj
-   - **Przypisz studentów** → dodaj studentów do tury (lub zaimportuj CSV z USOS)
-   - **Zarządzanie pytaniami** → dodaj pytania otwarte/zamknięte
-   - **Analityka** → przeglądaj wskaźniki, eksportuj raport PDF/CSV
-   - **Użytkownicy** → przeglądaj konta, zmieniaj role
+   **Zarządzanie turami** → utwórz turę, ustaw daty, aktywuj
+   **Przypisz studentów** → dodaj studentów do tury (lub zaimportuj CSV z USOS)
+   **Zarządzanie pytaniami** → dodaj pytania otwarte/zamknięte
+   **Analityka** → przeglądaj wskaźniki, eksportuj raport PDF/CSV
+   **Użytkownicy** → przeglądaj konta, zmieniaj role
 
 ### Jako Nauczyciel
 
 1. Zaloguj się kontem z rolą Teacher  
    *(tryb demo: `teacher@teacher.pl` z dowolnym hasłem)*
 2. W panelu nauczyciela możesz:
-   - Tworzyć i zarządzać pytaniami do ankiet
-   - Śledzić wskaźnik ukończenia tur (wykres progress bar per tura)
-   - Przeglądać powiadomienia o kończących się turach
+   Tworzyć i zarządzać pytaniami do ankiet
+   Śledzić wskaźnik ukończenia tur (wykres progress bar per tura)
+   Przeglądać powiadomienia o kończących się turach
 
 ###  Jako Student
 
 1. Zaloguj się przez SSO lub kontem z rolą Student  
    *(tryb demo: `student@student.pl` z dowolnym hasłem)*
 2. Na liście ankiet zobaczysz przypisane tury ze statusem:
-   - **Do wypełnienia** — aktywna, w terminie, token nieużyty
-   - **Wypełniona** — token oznaczony jako użyty
-   - **Zakończona** — tura po dacie końcowej
+   **Do wypełnienia** — aktywna, w terminie, token nieużyty
+   **Wypełniona** — token oznaczony jako użyty
+   **Zakończona** — tura po dacie końcowej
 3. Kliknij turę i wypełnij ankietę — odpowiedzi są w pełni anonimowe
 
 ---
@@ -278,41 +278,60 @@ npm run dev
 
 ```
 uniankieta/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                # Konfiguracja CI/CD (GitHub Actions)
 ├── backend/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── admin.py          # Endpointy administracyjne
-│   │   │   ├── analytics.py      # Analityka i eksport (Sprint 5)
+│   │   │   ├── analytics.py      # Analityka i eksport danych (Sprint 5)
 │   │   │   ├── auth.py           # Autentykacja JWT i SSO
 │   │   │   ├── questions.py      # Szablony pytań (UC-30)
 │   │   │   ├── responses.py      # Wypełnianie ankiet (UC-05)
 │   │   │   ├── teacher.py        # Panel nauczyciela (Sprint 6)
-│   │   │   ├── tours.py          # Zarządzanie turami (UC-01)
-│   │   │   └── usos.py           # Import CSV z USOS
+│   │   │   ├── tours.py          # Zarządzanie turami ankiet (UC-01)
+│   │   │   └── usos.py           # Import plików CSV z USOS
 │   │   ├── core/
-│   │   │   ├── auth_service.py   # Logika SSO i auto-create user
+│   │   │   ├── auth_service.py   # Logika SSO i automatyczne tworzenie użytkownika
 │   │   │   ├── deps.py           # Zależności JWT (get_current_user)
-│   │   │   └── security.py       # create_access_token
+│   │   │   └── security.py       # Generowanie tokenów (create_access_token)
 │   │   ├── __init__.py
-│   │   ├── database.py           # Konfiguracja SQLAlchemy
-│   │   ├── main.py               # Punkt wejścia FastAPI, rejestracja routerów
+│   │   ├── database.py           # Konfiguracja SQLAlchemy i bazy danych
+│   │   ├── main.py               # Punkt wejściowy FastAPI, rejestracja routerów
 │   │   ├── models.py             # Modele ORM (User, SurveyTour, Answer, ...)
-│   │   └── schemas.py            # Schematy Pydantic
+│   │   └── schemas.py            # Schematy Pydantic (walidacja danych)
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── api.js                # Współdzielony helper fetch z JWT
+│   │   ├── api.js                # Współdzielony helper fetch z obsługą JWT
 │   │   ├── adminUsers.js         # Zarządzanie użytkownikami (UC-35)
 │   │   ├── login.js              # Logowanie i obsługa tokenów
-│   │   ├── TourCompletionTracker.js  # Wykres ukończenia tur (Sprint 6)
+│   │   ├── TourCompletionTracker.js  # Wykres ukończenia tur ankiet (Sprint 6)
 │   │   └── ...
-│   ├── Dockerfile
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
+│   ├── .gitignore                # Wykluczenia Gita dla frontend-u
+│   ├── .gitkeep                  # Plik techniczny do zachowania struktury katalogów
+│   ├── Dockerfile                # Konfiguracja Dockera dla frontend-u
+│   ├── index.html                # Główny plik HTML aplikacji
+│   ├── package-lock.json         # Plik blokady zależności npm
+│   ├── package.json              # Skrypty i zależności projektu Node.js
+│   ├── postcss.config.js         # Konfiguracja PostCSS (wymagana dla Tailwind)
+│   ├── tailwind.config.js        # Konfiguracja stylów Tailwind CSS
+│   └── vite.config.js            # Konfiguracja narzędzia budującego Vite
+├── screenshots/                  # Zrzuty ekranu interfejsu aplikacji
+│   ├── admin_dashboard.png
+│   ├── admin_questions.png
+│   ├── admin_tours.png
+│   ├── admin_users.png
+│   ├── completion_tracker.jpg
+│   ├── login.png
+│   ├── student_surveys.png
+│   ├── survey_form.png
+│   └── teacher_panel.png
 ├── docker-compose.yml
-└── README.md
+├── README.md
+└── students.csv                  # Dane studentów i grup zaimportowane z USOS (Sprint 3)
 ```
 
 ---
