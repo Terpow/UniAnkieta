@@ -5,7 +5,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql)](https://www.postgresql.org/)
 [![Vite](https://img.shields.io/badge/Vite-JS-646CFF?logo=vite)](https://vitejs.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docs.docker.com/compose/)
-[![Wersja](https://img.shields.io/badge/wersja-v1.6.0-blue)]()
+
 
 ---
 
@@ -14,16 +14,16 @@
 **UniAnkieta** to webowa platforma ankiet przeznaczona dla środowisk akademickich. Rozwiązuje problem ręcznego zbierania i analizy opinii studenckich — zastępuje papierowe formularze i rozproszone arkusze kalkulacyjne jednym, zintegrowanym systemem.
 
 **Dla kogo:**
--  **Studenci** — wypełniają ankiety przypisane do ich grup, korzystając z jednorazowych, anonimowych tokenów
--  **Wykładowcy** — tworzą pytania, śledzą wskaźniki ukończenia tur w czasie rzeczywistym
--  **Administratorzy** — zarządzają użytkownikami, turami ankiet, importują dane z systemu USOS, eksportują raporty
+**Studenci** — wypełniają ankiety przypisane do ich grup, korzystając z jednorazowych, anonimowych tokenów
+**Wykładowcy** — tworzą pytania, śledzą wskaźniki ukończenia tur w czasie rzeczywistym
+**Administratorzy** — zarządzają użytkownikami, turami ankiet, importują dane z systemu USOS, eksportują raporty
 
 **Kluczowe zalety:**
-- Pełna anonimizacja odpowiedzi dzięki systemowi jednorazowych tokenów UUID
-- Zgodność z RODO — odpowiedzi nie są powiązane z tożsamością studenta
-- Import studentów z pliku CSV (format USOS)
-- Eksport raportów w formacie PDF i CSV (`reportlab`)
-- Logowanie przez SSO (integracja z USOS)
+Pełna anonimizacja odpowiedzi dzięki systemowi jednorazowych tokenów UUID
+Zgodność z RODO — odpowiedzi nie są powiązane z tożsamością studenta
+Import studentów z pliku CSV (format USOS)
+Eksport raportów w formacie PDF i CSV (`reportlab`)
+Logowanie przez SSO (integracja z USOS)
 
 ---
 
@@ -31,12 +31,12 @@
 
 | Sprint | Cel (Kamień milowy)                              | Termin     |
 |--------|--------------------------------------------------|------------|
-| 1      | Konfiguracja środowiska, Docker, baza danych     | 24.03.2026 |
-| 2      | Autentykacja JWT, SSO, system ról (UC-01)        | 07.04.2026 |
-| 3      | Zarządzanie turami ankiet i pytaniami (UC-30)    | 21.04.2026 |
-| 4      | Anonimowe wypełnianie ankiet, tokeny (UC-05)     | 05.05.2026 |
-| 5      | Analityka, eksport PDF/CSV, dashboard admina     | 19.05.2026 |
-| 6      | Panel nauczyciela, powiadomienia, import USOS    | 02.06.2026 |
+| 1      | Konfiguracja środowiska, Docker, baza danych     | 17.03.2026 |
+| 2      | Autentykacja JWT, SSO, system ról (UC-01)        | 24.03.2026 |
+| 3      | Zarządzanie turami ankiet i pytaniami (UC-30)    | 02.04.2026 |
+| 4      | Anonimowe wypełnianie ankiet, tokeny (UC-05)     | 30.04.2026 |
+| 5      | Analityka, eksport PDF/CSV, dashboard admina     | 14.05.2026 |
+| 6      | Panel nauczyciela, powiadomienia, import USOS    | 20.05.2026 |
 
 ---
 
@@ -45,63 +45,63 @@
 | Imię i nazwisko       | Rola                        |
 |-----------------------|-----------------------------|
 | Stanislav Kosheliev      | Backend (FastAPI, SQLAlchemy) |
-| Aliaksei Kalcheuski      | Frontend (Vite, JavaScript)   |
-| Aliaksei Kalcheuski,Stanislav Kosheliev    | DevOps / Baza danych (Docker, PostgreSQL) |
+| Amirseit Kystaubay      | Frontend (Vite, JavaScript)   |
+| Aliaksei Kalcheuski    | DevOps / Baza danych (Docker, PostgreSQL) |
 
 ---
 
 ## Technologie
 
 **Backend:**
-- Python 3.11, FastAPI 0.135, Uvicorn 0.42
-- SQLAlchemy 2.0 (ORM), Pydantic 2.12
-- PostgreSQL 15, psycopg2-binary
-- JWT (`python-jose`), bcrypt (`passlib`)
-- `reportlab` 4.2 — generowanie raportów PDF
-- `python-multipart` — obsługa plików CSV (import USOS)
+Python 3.11, FastAPI 0.135, Uvicorn 0.42
+SQLAlchemy 2.0 (ORM), Pydantic 2.12
+PostgreSQL 15, psycopg2-binary
+JWT (`python-jose`), bcrypt (`passlib`)
+`reportlab` 4.2 — generowanie raportów PDF
+`python-multipart` — obsługa plików CSV (import USOS)
 
 **Frontend:**
-- Vite + Vanilla JavaScript (ES Modules)
-- Chart.js — wizualizacje i wykresy
-- Architektura SPA z routingiem po stronie klienta
+Vite + Vanilla JavaScript (ES Modules)
+Chart.js — wizualizacje i wykresy
+Architektura SPA z routingiem po stronie klienta
 
 **Infrastruktura:**
-- Docker 24+, Docker Compose v3.8
-- Trzy serwisy: `uniankieta_db`, `uniankieta_api`, `uniankieta_web`
+Docker 24+, Docker Compose v3.8
+Trzy serwisy: `uniankieta_db`, `uniankieta_api`, `uniankieta_web`
 
 ---
 
 ## Kluczowe funkcjonalności
 
 ###  Administrator
--Zarządzanie użytkownikami — przeglądanie, zmiana ról (Admin / Teacher / Student)
-- Tworzenie, edycja i usuwanie tur ankiet (`SurveyTour`)
-- Przypisywanie i usuwanie studentów z tur
-- Import studentów z pliku `.csv` (format USOS, kodowanie UTF-8-BOM)
-- Podgląd statusu tokenów (przypisany / wypełniony)
-- Eksport raportów analitycznych do PDF i CSV
-- Dashboard z globalnym wskaźnikiem wypełnienia ankiet
+Zarządzanie użytkownikami — przeglądanie, zmiana ról (Admin / Teacher / Student)
+Tworzenie, edycja i usuwanie tur ankiet (`SurveyTour`)
+Przypisywanie i usuwanie studentów z tur
+Import studentów z pliku `.csv` (format USOS, kodowanie UTF-8-BOM)
+Podgląd statusu tokenów (przypisany / wypełniony)
+Eksport raportów analitycznych do PDF i CSV
+Dashboard z globalnym wskaźnikiem wypełnienia ankiet
 
 ###  Nauczyciel
-- Tworzenie pytań otwartych (`open`) i zamkniętych (`closed`) z wariantami odpowiedzi
-- Aktywowanie i deaktywowanie pytań
-- Śledzenie wskaźnika ukończenia tur w czasie rzeczywistym (`TourCompletionTracker`)
-- Powiadomienia o turach kończących się w ciągu 48 godzin
-- Widok postępu per tura: przypisani / wypełnili
+Tworzenie pytań otwartych (`open`) i zamkniętych (`closed`) z wariantami odpowiedzi
+Aktywowanie i deaktywowanie pytań
+Śledzenie wskaźnika ukończenia tur w czasie rzeczywistym (`TourCompletionTracker`)
+Powiadomienia o turach kończących się w ciągu 48 godzin
+Widok postępu per tura: przypisani / wypełnili
 
 ###  Student
-- Logowanie przez SSO (USOS) lub email + hasło
-- Przeglądanie przypisanych ankiet ze statusem (`Do wypełnienia`, `Wypełniona`, `Zakończona`)
-- Anonimowe wypełnianie ankiet za pomocą jednorazowego tokenu UUID
-- Powiadomienia o nowych i nadchodzących ankietach
-- Blokada ponownego wypełnienia (token `is_used = true`)
+Logowanie przez SSO (USOS) lub email + hasło
+Przeglądanie przypisanych ankiet ze statusem (`Do wypełnienia`, `Wypełniona`, `Zakończona`)
+Anonimowe wypełnianie ankiet za pomocą jednorazowego tokenu UUID
+Powiadomienia o nowych i nadchodzących ankietach
+Blokada ponownego wypełnienia (token `is_used = true`)
 
 ###  System i bezpieczeństwo
-- Autentykacja JWT (Bearer Token) na wszystkich chronionych endpointach
-- Logowanie SSO z callbackiem i automatycznym tworzeniem konta
-- Anonimizacja — odpowiedzi nie zawierają danych identyfikacyjnych studenta
-- Automatyczna migracja tabel przy starcie (`create_all` z retry loop)
-- Healthcheck bazy danych w Docker Compose
+Autentykacja JWT (Bearer Token) na wszystkich chronionych endpointach
+Logowanie SSO z callbackiem i automatycznym tworzeniem konta
+Anonimizacja — odpowiedzi nie zawierają danych identyfikacyjnych studenta
+Automatyczna migracja tabel przy starcie (`create_all` z retry loop)
+Healthcheck bazy danych w Docker Compose
 
 ---
 
@@ -141,8 +141,8 @@ Aplikacja zbudowana jest w architekturze **klient–serwer** z podziałem na trz
 ## Instalacja
 
 ### Wymagania systemowe
-- Docker 24+ oraz Docker Compose v2+
-- **lub** Python 3.11+ i Node.js 18+ (uruchomienie lokalne)
+Docker 24+ oraz Docker Compose v2+
+**lub** Python 3.11+ i Node.js 18+ (uruchomienie lokalne)
 
 ### 1. Sklonuj repozytorium
 
@@ -403,7 +403,7 @@ Pełna interaktywna dokumentacja Swagger UI dostępna pod: `http://localhost:800
 
 ## Status projektu
 
-**Wersja:** `v1.6.0` — aktywny rozwój
+
 
 | Moduł                          | Status        |
 |--------------------------------|---------------|
